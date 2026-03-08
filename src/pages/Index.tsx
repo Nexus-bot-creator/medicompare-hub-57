@@ -4,6 +4,7 @@ import { Search, Shield, Bell, TrendingDown, Pill, ArrowRight, CheckCircle2, Use
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchSuggestions from "@/components/SearchSuggestions";
+import CountUp from "@/components/CountUp";
 
 const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementType; title: string; desc: string; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -61,7 +62,7 @@ const StepCard = ({ num, title, desc, index }: { num: string; title: string; des
   );
 };
 
-const StatItem = ({ value, label, index }: { value: string; label: string; index: number }) => {
+const StatItem = ({ value, label, index }: { value: React.ReactNode; label: string; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -115,10 +116,10 @@ const Index = () => {
   ];
 
   const stats = [
-    { value: "5+", label: "Partner Pharmacies" },
-    { value: "10K+", label: "Medicines Tracked" },
-    { value: "₹500+", label: "Avg. Savings/Year" },
-    { value: "50K+", label: "Happy Users" },
+    { value: <><CountUp from={0} to={5} direction="up" duration={1.5} className="count-up-text" />+</>, label: "Partner Pharmacies" },
+    { value: <><CountUp from={0} to={10} direction="up" duration={1.5} className="count-up-text" />K+</>, label: "Medicines Tracked" },
+    { value: <>₹<CountUp from={0} to={500} direction="up" duration={1.5} className="count-up-text" />+</>, label: "Avg. Savings/Year" },
+    { value: <><CountUp from={0} to={50} direction="up" duration={1.5} className="count-up-text" />K+</>, label: "Happy Users" },
   ];
 
   const steps = [
@@ -237,7 +238,16 @@ const Index = () => {
                   ))}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  <span className="text-foreground font-medium">50,000+</span> users saving on medicines
+                  <span className="text-foreground font-medium">
+                    <CountUp
+                      from={0}
+                      to={50000}
+                      separator=","
+                      direction="up"
+                      duration={1.5}
+                      className="count-up-text"
+                    />+
+                  </span> users saving on medicines
                 </div>
                 <div className="flex items-center gap-0.5 ml-auto">
                   {[...Array(5)].map((_, i) => (
