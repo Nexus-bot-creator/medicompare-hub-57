@@ -61,7 +61,7 @@ const StepCard = ({ num, title, desc, index }: { num: string; title: string; des
   );
 };
 
-
+const StatItem = ({ value, label, index }: { value: string; label: string; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
