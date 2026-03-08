@@ -14,9 +14,10 @@ interface Props {
 const SearchSuggestions = ({ query, onSelect, visible }: Props) => {
   const navigate = useNavigate();
 
+  const q = query.toLowerCase().trim();
+
   if (!visible) return null;
 
-  const q = query.toLowerCase().trim();
 
   const matchedMedicines = q
     ? medicines
