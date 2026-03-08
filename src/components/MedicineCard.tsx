@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { Heart, Bell, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,21 @@ import { getLowestPrice, getSavingsPercent } from "@/lib/mock-data";
 
 interface Props {
   medicine: Medicine;
+  index?: number;
 }
 
-const MedicineCard = ({ medicine }: Props) => {
+const MedicineCard = ({ medicine, index = 0 }: Props) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
   const { toggleWishlist, isInWishlist, addPriceAlert } = useApp();
   const navigate = useNavigate();
   const lowest = getLowestPrice(medicine.prices);
@@ -40,6 +53,11 @@ const MedicineCard = ({ medicine }: Props) => {
   };
 
   return (
+    <div
+      ref={ref}
+      className={`transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+      style={{ transitionDelay: `${(index % 6) * 100}ms` }}
+    >
     <Card className="group overflow-hidden border border-border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
       <CardContent className="p-5">
         {/* Header */}
@@ -96,6 +114,7 @@ const MedicineCard = ({ medicine }: Props) => {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };
 
