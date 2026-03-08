@@ -41,7 +41,7 @@ const SearchSuggestions = ({ query, onSelect, visible }: Props) => {
   };
 
   return (
-    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50 animate-fade-in">
+    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg overflow-y-auto max-h-[60vh] z-50 animate-fade-in">
       {/* No query — show popular & categories */}
       {!q && (
         <div className="p-3 space-y-3">
