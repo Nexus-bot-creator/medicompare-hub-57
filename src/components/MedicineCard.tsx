@@ -14,6 +14,7 @@ interface Props {
 
 const MedicineCard = ({ medicine }: Props) => {
   const { toggleWishlist, isInWishlist, addPriceAlert } = useApp();
+  const navigate = useNavigate();
   const lowest = getLowestPrice(medicine.prices);
   const savings = getSavingsPercent(medicine.prices);
   const inWishlist = isInWishlist(medicine.id);
