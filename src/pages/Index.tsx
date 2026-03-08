@@ -35,7 +35,33 @@ const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementTy
   );
 };
 
-const StatItem = ({ value, label, index }: { value: string; label: string; index: number }) => {
+const StepCard = ({ num, title, desc, index }: { num: string; title: string; desc: string; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { threshold: 0.2 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`relative text-center transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+      style={{ transitionDelay: `${index * 150}ms` }}
+    >
+      <div className="text-5xl font-extrabold text-primary/10 mb-3">{num}</div>
+      <h3 className="font-semibold text-foreground mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+    </div>
+  );
+};
+
+
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
