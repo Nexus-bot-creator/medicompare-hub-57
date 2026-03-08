@@ -43,9 +43,9 @@ const MedicineCard = ({ medicine }: Props) => {
     <Card className="group overflow-hidden border border-border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
       <CardContent className="p-5">
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-3 cursor-pointer" onClick={() => navigate(`/medicine/${medicine.id}`)}>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground text-base truncate">{medicine.name}</h3>
+            <h3 className="font-semibold text-foreground text-base truncate hover:text-primary transition-colors">{medicine.name}</h3>
             <p className="text-sm text-muted-foreground">{medicine.dosage} · {medicine.form}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{medicine.manufacturer}</p>
           </div>
