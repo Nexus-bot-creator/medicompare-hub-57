@@ -35,6 +35,7 @@ const Header = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (headerSearch.trim()) {
+      setShowSuggestions(false);
       navigate(`/search?q=${encodeURIComponent(headerSearch.trim())}`);
       setHeaderSearch("");
     }
