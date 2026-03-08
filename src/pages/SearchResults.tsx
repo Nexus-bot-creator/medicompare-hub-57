@@ -111,8 +111,8 @@ const SearchResults = () => {
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filtered.map((m) => (
-                  <MedicineCard key={m.id} medicine={m} />
+                {filtered.map((m, i) => (
+                  <MedicineCard key={m.id} medicine={m} index={i} />
                 ))}
               </div>
             )}

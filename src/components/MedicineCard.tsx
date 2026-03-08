@@ -114,6 +114,7 @@ const MedicineCard = ({ medicine, index = 0 }: Props) => {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };
 
