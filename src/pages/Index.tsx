@@ -4,6 +4,36 @@ import { Search, Shield, Bell, TrendingDown, Pill } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementType; title: string; desc: string; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { threshold: 0.2 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`text-center p-6 rounded-2xl bg-card border border-border hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 transition-all duration-500 cursor-pointer group ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+      }`}
+      style={{ transitionDelay: `${index * 150}ms` }}
+    >
+      <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:bg-primary/15 transition-all duration-300">
+        <Icon className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+      </div>
+      <h3 className="font-semibold text-foreground mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground">{desc}</p>
+    </div>
+  );
+};
+
 const Index = () => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
