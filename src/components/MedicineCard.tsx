@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { Heart, Bell, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,21 @@ import { getLowestPrice, getSavingsPercent } from "@/lib/mock-data";
 
 interface Props {
   medicine: Medicine;
+  index?: number;
 }
 
-const MedicineCard = ({ medicine }: Props) => {
+const MedicineCard = ({ medicine, index = 0 }: Props) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { threshold: 0.15 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
   const { toggleWishlist, isInWishlist, addPriceAlert } = useApp();
   const navigate = useNavigate();
   const lowest = getLowestPrice(medicine.prices);
