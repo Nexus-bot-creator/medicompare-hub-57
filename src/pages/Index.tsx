@@ -88,17 +88,28 @@ const Index = () => {
           </p>
 
           <form onSubmit={handleSearch} className="max-w-xl mx-auto">
-            <div className="relative flex items-center bg-card border border-border rounded-2xl shadow-lg shadow-primary/5 p-1.5">
+            <div ref={searchRef} className="relative flex items-center bg-card border border-border rounded-2xl shadow-lg shadow-primary/5 p-1.5">
               <Search className="absolute left-4 h-5 w-5 text-muted-foreground" />
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
                 placeholder="Search for a medicine (e.g., Paracetamol)..."
                 className="pl-11 pr-4 h-12 border-0 bg-transparent focus-visible:ring-0 text-base" />
               
               <Button type="submit" className="rounded-xl px-6 h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shrink-0">
                 Search
               </Button>
+
+              <SearchSuggestions
+                query={query}
+                visible={showSuggestions}
+                onSelect={(val) => {
+                  setQuery(val);
+                  setShowSuggestions(false);
+                  navigate(`/search?q=${encodeURIComponent(val)}`);
+                }}
+              />
             </div>
           </form>
         </div>
