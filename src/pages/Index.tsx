@@ -285,30 +285,9 @@ const Index = () => {
             <p className="text-muted-foreground max-w-md mx-auto">Three simple steps to start saving on your prescriptions.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {steps.map((step, i) => {
-              const ref = useRef<HTMLDivElement>(null);
-              const [isVisible, setIsVisible] = useState(false);
-              useEffect(() => {
-                const observer = new IntersectionObserver(
-                  ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
-                  { threshold: 0.2 }
-                );
-                if (ref.current) observer.observe(ref.current);
-                return () => observer.disconnect();
-              }, []);
-              return (
-                <div
-                  key={step.num}
-                  ref={ref}
-                  className={`relative text-center transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
-                  style={{ transitionDelay: `${i * 150}ms` }}
-                >
-                  <div className="text-5xl font-extrabold text-primary/10 mb-3">{step.num}</div>
-                  <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
-                </div>
-              );
-            })}
+            {steps.map((step, i) => (
+              <StepCard key={step.num} num={step.num} title={step.title} desc={step.desc} index={i} />
+            ))}
           </div>
         </div>
       </section>
