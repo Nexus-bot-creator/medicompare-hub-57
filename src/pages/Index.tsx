@@ -14,10 +14,10 @@ const Index = () => {
   };
 
   const features = [
-    { icon: TrendingDown, title: "Best Prices", desc: "Compare prices across 5+ pharmacies instantly" },
-    { icon: Bell, title: "Price Alerts", desc: "Get notified when prices drop to your target" },
-    { icon: Shield, title: "Trusted Sources", desc: "Only verified, licensed online pharmacies" },
-  ];
+  { icon: TrendingDown, title: "Best Prices", desc: "Compare prices across 5+ pharmacies instantly" },
+  { icon: Bell, title: "Price Alerts", desc: "Get notified when prices drop to your target" },
+  { icon: Shield, title: "Trusted Sources", desc: "Only verified, licensed online pharmacies" }];
+
 
   return (
     <div className="min-h-screen">
@@ -50,8 +50,8 @@ const Index = () => {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search for a medicine (e.g., Paracetamol)..."
-                className="pl-11 pr-4 h-12 border-0 bg-transparent focus-visible:ring-0 text-base"
-              />
+                className="pl-11 pr-4 h-12 border-0 bg-transparent focus-visible:ring-0 text-base" />
+              
               <Button type="submit" className="rounded-xl px-6 h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shrink-0">
                 Search
               </Button>
@@ -63,19 +63,19 @@ const Index = () => {
       {/* Features */}
       <section className="pb-20 px-4">
         <div className="container mx-auto max-w-4xl">
-          <div className="grid md:grid-cols-3 gap-6">
-            {features.map((f) => (
-                <div
-                  key={f.title}
-                  className="text-center p-6 rounded-2xl bg-card border border-border hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 transition-all duration-300 cursor-pointer group"
-                >
+          <div className="grid md:grid-cols-3 gap-6 mx-0 my-[10px]">
+            {features.map((f) =>
+            <div
+              key={f.title}
+              className="text-center p-6 rounded-2xl bg-card border border-border hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 transition-all duration-300 cursor-pointer group">
+              
                   <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:bg-primary/15 transition-all duration-300">
                     <f.icon className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-300" />
                   </div>
                 <h3 className="font-semibold text-foreground mb-2">{f.title}</h3>
                 <p className="text-sm text-muted-foreground">{f.desc}</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -85,8 +85,8 @@ const Index = () => {
           © 2026 MediCompare. Compare smarter, save more.
         </div>
       </footer>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Index;
