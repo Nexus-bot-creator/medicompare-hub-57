@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Shield, Bell, TrendingDown, Pill } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import SearchSuggestions from "@/components/SearchSuggestions";
 
 const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementType; title: string; desc: string; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
