@@ -53,6 +53,7 @@ const Index = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowSuggestions(false);
     navigate(`/search?q=${encodeURIComponent(query.trim() || "")}`);
   };
 
