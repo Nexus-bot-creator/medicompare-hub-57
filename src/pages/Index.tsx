@@ -279,7 +279,7 @@ const Index = () => {
                 >
                   <div className="text-5xl font-extrabold text-primary/10 mb-3">{step.num}</div>
                   <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
                 </div>
               );
             })}
