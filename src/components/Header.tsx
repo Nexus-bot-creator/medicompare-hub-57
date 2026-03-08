@@ -1,17 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Sun, Moon, Heart, Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApp } from "@/contexts/AppContext";
 import { Badge } from "@/components/ui/badge";
+import SearchSuggestions from "@/components/SearchSuggestions";
 
 const Header = () => {
   const { isDark, toggleTheme, wishlist, setAuthModal, isLoggedIn } = useApp();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 300);
@@ -22,6 +35,7 @@ const Header = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (headerSearch.trim()) {
+      setShowSuggestions(false);
       navigate(`/search?q=${encodeURIComponent(headerSearch.trim())}`);
       setHeaderSearch("");
     }
@@ -43,13 +57,24 @@ const Header = () => {
         {/* Center search - visible after scroll */}
         {scrolled && (
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
+            <div ref={searchRef} className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={headerSearch}
                 onChange={(e) => setHeaderSearch(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
                 placeholder="Search medicines..."
                 className="pl-9 h-9 rounded-full bg-secondary/80 border-0 focus-visible:ring-primary"
+              />
+              <SearchSuggestions
+                query={headerSearch}
+                visible={showSuggestions}
+                onSelect={(val) => {
+                  setHeaderSearch(val);
+                  setShowSuggestions(false);
+                  navigate(`/search?q=${encodeURIComponent(val)}`);
+                  setHeaderSearch("");
+                }}
               />
             </div>
           </form>

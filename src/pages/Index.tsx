@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Shield, Bell, TrendingDown, Pill } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import SearchSuggestions from "@/components/SearchSuggestions";
 
 const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementType; title: string; desc: string; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -36,10 +37,23 @@ const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementTy
 
 const Index = () => {
   const [query, setQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowSuggestions(false);
     navigate(`/search?q=${encodeURIComponent(query.trim() || "")}`);
   };
 
@@ -74,17 +88,28 @@ const Index = () => {
           </p>
 
           <form onSubmit={handleSearch} className="max-w-xl mx-auto">
-            <div className="relative flex items-center bg-card border border-border rounded-2xl shadow-lg shadow-primary/5 p-1.5">
+            <div ref={searchRef} className="relative flex items-center bg-card border border-border rounded-2xl shadow-lg shadow-primary/5 p-1.5">
               <Search className="absolute left-4 h-5 w-5 text-muted-foreground" />
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
                 placeholder="Search for a medicine (e.g., Paracetamol)..."
                 className="pl-11 pr-4 h-12 border-0 bg-transparent focus-visible:ring-0 text-base" />
               
               <Button type="submit" className="rounded-xl px-6 h-10 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shrink-0">
                 Search
               </Button>
+
+              <SearchSuggestions
+                query={query}
+                visible={showSuggestions}
+                onSelect={(val) => {
+                  setQuery(val);
+                  setShowSuggestions(false);
+                  navigate(`/search?q=${encodeURIComponent(val)}`);
+                }}
+              />
             </div>
           </form>
         </div>
