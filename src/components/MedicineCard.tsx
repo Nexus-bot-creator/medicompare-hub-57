@@ -53,6 +53,11 @@ const MedicineCard = ({ medicine, index = 0 }: Props) => {
   };
 
   return (
+    <div
+      ref={ref}
+      className={`transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+      style={{ transitionDelay: `${(index % 6) * 100}ms` }}
+    >
     <Card className="group overflow-hidden border border-border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
       <CardContent className="p-5">
         {/* Header */}
