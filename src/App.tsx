@@ -8,6 +8,7 @@ import AuthModal from "@/components/AuthModal";
 import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
 import Dashboard from "./pages/Dashboard";
+import MedicineDetail from "./pages/MedicineDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="/medicine/:id" element={<MedicineDetail />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
