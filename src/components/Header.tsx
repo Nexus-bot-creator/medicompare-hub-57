@@ -42,7 +42,7 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass transition-all duration-300">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#e0f5f3] dark:bg-[#173632] shadow-sm transition-all duration-300">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 shrink-0">
@@ -50,7 +50,7 @@ const Header = () => {
             <span className="text-primary-foreground font-bold text-sm">M</span>
           </div>
           <span className="text-lg font-bold text-foreground tracking-tight">
-            Medi<span className="text-primary">Compare</span>
+            Medi<span className="text-primary">Pedia</span>
           </span>
         </Link>
 
@@ -64,7 +64,7 @@ const Header = () => {
                 onChange={(e) => setHeaderSearch(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder="Search medicines..."
-                className="pl-9 h-9 rounded-full bg-secondary/80 border-0 focus-visible:ring-primary"
+                className="pl-9 h-9 rounded-full bg-secondary/80 border-0 hover:ring-2 hover:ring-primary focus-visible:ring-2 focus-visible:ring-primary transition-all"
               />
               <SearchSuggestions
                 query={headerSearch}
@@ -103,7 +103,7 @@ const Header = () => {
             </Link>
           ) : (
             <>
-              <Button variant="ghost" className="rounded-full px-4 h-9 text-sm" onClick={() => setAuthModal("login")}>
+              <Button variant="outline" className="rounded-full px-4 h-9 text-sm" onClick={() => setAuthModal("login")}>
                 Log in
               </Button>
               <Button className="rounded-full px-4 h-9 text-sm bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAuthModal("signup")}>
@@ -121,7 +121,7 @@ const Header = () => {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden glass border-t border-border p-4 space-y-3 animate-fade-in">
+        <div className="md:hidden bg-[#e0f5f3] dark:bg-[#173632] border-t border-border p-4 space-y-3 animate-fade-in">
           <form onSubmit={handleSearch}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -129,7 +129,7 @@ const Header = () => {
                 value={headerSearch}
                 onChange={(e) => setHeaderSearch(e.target.value)}
                 placeholder="Search medicines..."
-                className="pl-9 rounded-full bg-secondary/80 border-0"
+                className="pl-9 rounded-full bg-secondary/80 border-0 hover:ring-2 hover:ring-primary focus-visible:ring-2 focus-visible:ring-primary transition-all"
               />
             </div>
           </form>
@@ -154,7 +154,7 @@ const Header = () => {
             </Link>
           ) : (
             <div className="flex gap-2">
-              <Button variant="ghost" className="flex-1 rounded-full" onClick={() => { setAuthModal("login"); setMobileOpen(false); }}>
+              <Button variant="outline" className="flex-1 rounded-full" onClick={() => { setAuthModal("login"); setMobileOpen(false); }}>
                 Log in
               </Button>
               <Button className="flex-1 rounded-full bg-primary text-primary-foreground" onClick={() => { setAuthModal("signup"); setMobileOpen(false); }}>

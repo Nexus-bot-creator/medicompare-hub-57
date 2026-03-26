@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Shield, Bell, TrendingDown, Pill, ArrowRight, CheckCircle2, Users, Star } from "lucide-react";
+import { Shield, Bell, TrendingDown, Pill, ArrowRight, CheckCircle2, Syringe, HeartPulse, BriefcaseMedical} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import SearchSuggestions from "@/components/SearchSuggestions";
 import CountUp from "@/components/CountUp";
 
 const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementType; title: string; desc: string; index: number }) => {
@@ -22,9 +20,8 @@ const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementTy
   return (
     <div
       ref={ref}
-      className={`text-left p-7 rounded-2xl bg-card border border-border hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 transition-all duration-500 cursor-pointer group ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-      }`}
+      className={`text-left p-7 rounded-2xl bg-card border border-border hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 transition-all duration-500 cursor-pointer group ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        }`}
       style={{ transitionDelay: `${index * 150}ms` }}
     >
       <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/15 transition-all duration-300">
@@ -55,7 +52,7 @@ const StepCard = ({ num, title, desc, index }: { num: string; title: string; des
       className={`relative text-center transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
       style={{ transitionDelay: `${index * 150}ms` }}
     >
-      <div className="text-5xl font-extrabold text-primary/10 mb-3">{num}</div>
+      <div className="text-5xl font-extrabold text-[#188B7F] dark:text-[#17CFBC] mb-3">{num}</div>
       <h3 className="font-semibold text-foreground mb-2">{title}</h3>
       <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
     </div>
@@ -88,31 +85,15 @@ const StatItem = ({ value, label, index }: { value: React.ReactNode; label: stri
 };
 
 const Index = () => {
-  const [query, setQuery] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowSuggestions(false);
-    navigate(`/search?q=${encodeURIComponent(query.trim() || "")}`);
-  };
 
   const features = [
     { icon: TrendingDown, title: "Real-Time Price Comparison", desc: "Instantly compare prices across 5+ licensed pharmacies to find the best deal on every medicine." },
     { icon: Bell, title: "Smart Price Alerts", desc: "Set your target price and get notified the moment a pharmacy drops below it. Never overpay again." },
     { icon: Shield, title: "Verified & Trusted", desc: "Every pharmacy in our network is licensed and verified, so you can shop with complete confidence." },
+    { icon: HeartPulse, title: "Title-4", desc: "Instantly compare prices across 5+ licensed pharmacies to find the best deal on every medicine." },
+    { icon: BriefcaseMedical, title: "Title-5", desc: "Set your target price and get notified the moment a pharmacy drops below it. Never overpay again." },
+    { icon: Syringe, title: "Title-6", desc: "Every pharmacy in our network is licensed and verified, so you can shop with complete confidence." },
   ];
 
   const stats = [
@@ -184,79 +165,7 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Right — Search */}
-            <div className="lg:pl-4">
-              <div className="bg-card border border-border rounded-2xl p-6 shadow-xl shadow-primary/5">
-                <p className="text-sm font-medium text-muted-foreground mb-3">Search for a medicine</p>
-                <form onSubmit={handleSearch}>
-                  <div ref={searchRef} className="relative flex items-center bg-background border border-border rounded-xl p-1">
-                    <Search className="absolute left-3.5 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onFocus={() => setShowSuggestions(true)}
-                      placeholder="e.g., Paracetamol, Vitamin D3..."
-                      className="pl-10 pr-4 h-11 border-0 bg-transparent focus-visible:ring-0 text-base"
-                    />
-                    <Button type="submit" className="rounded-lg px-5 h-9 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shrink-0">
-                      Search
-                    </Button>
 
-                    <SearchSuggestions
-                      query={query}
-                      visible={showSuggestions}
-                      onSelect={(val) => {
-                        setQuery(val);
-                        setShowSuggestions(false);
-                        navigate(`/search?q=${encodeURIComponent(val)}`);
-                      }}
-                    />
-                  </div>
-                </form>
-
-                {/* Quick categories */}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {["Pain Relief", "Diabetes", "Vitamins", "Antibiotics"].map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => navigate(`/search?q=${encodeURIComponent(cat)}`)}
-                      className="px-3 py-1.5 text-xs rounded-full bg-accent text-accent-foreground hover:bg-primary/15 hover:text-primary transition-colors font-medium"
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Social proof mini */}
-              <div className="flex items-center gap-3 mt-4 px-1">
-                <div className="flex -space-x-2">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="w-7 h-7 rounded-full bg-accent border-2 border-background flex items-center justify-center">
-                      <Users className="h-3 w-3 text-primary" />
-                    </div>
-                  ))}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  <span className="text-foreground font-medium">
-                    <CountUp
-                      from={0}
-                      to={50000}
-                      separator=","
-                      direction="up"
-                      duration={1.5}
-                      className="count-up-text"
-                    />+
-                  </span> users saving on medicines
-                </div>
-                <div className="flex items-center gap-0.5 ml-auto">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-3 w-3 fill-primary text-primary" />
-                  ))}
-                  <span className="text-xs text-muted-foreground ml-1">4.9</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
