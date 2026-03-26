@@ -3,6 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { Shield, Bell, TrendingDown, Pill, ArrowRight, CheckCircle2, Syringe, HeartPulse, BriefcaseMedical} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CountUp from "@/components/CountUp";
+import FlowingMenu from '@/components/FlowingMenu';
+
+const demoItems = [
+  { link: '#', text: 'Tata 1mg', image: 'public/1mg.png' },
+  { link: '#', text: 'Pharmeasy', image: 'public/pharmeasy.png' },
+  { link: '#', text: 'Netmeds', image: 'public/netmeds.jpeg' },
+  { link: '#', text: 'Apollo 24/7', image: 'public/apollo.png' },
+  { link: '#', text: 'Medplus', image: 'public/medplus.png' },
+  { link: '#', text: 'Flipkart Health+', image: 'public/Flipkart.jpeg' },
+  { link: '#', text: 'Truemeds', image: 'public/truemeds.jpeg' },
+  { link: '#', text: 'Zeno', image: 'public/Zeno.jpg' },
+  { link: '#', text: 'Wellness Forever', image: 'public/wellness_forever_logo.jpeg' }
+];
 
 const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementType; title: string; desc: string; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -165,6 +178,18 @@ const Index = () => {
               </div>
             </div>
 
+            {/* Right — Flowing Menu */}
+            <div className="h-[400px] lg:h-[600px] relative w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 mt-8 lg:mt-0">
+              <FlowingMenu 
+                items={demoItems}
+                speed={15}
+                textColor="#ffffff"
+                bgColor="#060010"
+                marqueeBgColor="#ffffff"
+                marqueeTextColor="#060010"
+                borderColor="#ffffff"
+              />
+            </div>
 
           </div>
         </div>
@@ -185,7 +210,7 @@ const Index = () => {
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Why Choose MediCompare?</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Why Choose MediPedia?</h2>
             <p className="text-muted-foreground max-w-lg mx-auto">Everything you need to find the best medicine prices, all in one place.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
