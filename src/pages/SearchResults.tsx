@@ -12,6 +12,7 @@ interface Filters {
   inStockOnly: boolean;
   selectedPharmacies: string[];
   priceRange: [number, number];
+  location?: string;
 }
 
 const defaultFilters: Filters = {
@@ -19,6 +20,7 @@ const defaultFilters: Filters = {
   inStockOnly: false,
   selectedPharmacies: [...pharmacies],
   priceRange: [0, 200],
+  location: "",
 };
 
 const SearchResults = () => {

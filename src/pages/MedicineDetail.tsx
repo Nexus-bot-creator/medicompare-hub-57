@@ -1,7 +1,8 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Bell, ExternalLink, Star, TrendingDown, Package, Info } from "lucide-react";
+import { ArrowLeft, Heart, Bell, ExternalLink, Star, TrendingDown, Package, Info, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -205,6 +206,43 @@ const MedicineDetail = () => {
                   <div className="flex justify-between"><span className="text-muted-foreground">Dosage</span><span className="text-foreground font-medium">{medicine.dosage}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Manufacturer</span><span className="text-foreground font-medium">{medicine.manufacturer}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Available at</span><span className="text-foreground font-medium">{medicine.prices.filter(p => p.inStock).length} pharmacies</span></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-border">
+              <CardContent className="p-5">
+                <h4 className="font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" /> Find Locally
+                </h4>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">Check local vendor availability by pincode:</p>
+                    <div className="flex gap-2">
+                      <Input placeholder="Pincode" className="h-9 text-sm" />
+                      <Button variant="secondary" className="h-9 px-3 shrink-0" onClick={() => {
+                        toast.success("Searching local vendors...", {
+                          description: "Hold on while we find pharmacies near this pincode."
+                        });
+                      }}>Check</Button>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or</span>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full h-9 text-xs gap-1" onClick={() => {
+                    toast.success("Location Access Requested", {
+                      description: "Finding pharmacies near you..."
+                    });
+                  }}>
+                    <MapPin className="h-3 w-3" />
+                    Use My Location
+                  </Button>
                 </div>
               </CardContent>
             </Card>

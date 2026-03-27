@@ -3,6 +3,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { MapPin } from "lucide-react";
 import { pharmacies } from "@/lib/mock-data";
 
 interface Filters {
@@ -10,6 +13,7 @@ interface Filters {
   inStockOnly: boolean;
   selectedPharmacies: string[];
   priceRange: [number, number];
+  location?: string;
 }
 
 interface Props {
@@ -24,7 +28,46 @@ const FilterSidebar = ({ filters, onChange }: Props) => {
     <div className="space-y-1">
       <h2 className="font-semibold text-foreground text-sm px-1 mb-3">Filters</h2>
 
-      <Accordion type="multiple" defaultValue={["sort", "stock", "pharmacy", "price"]} className="space-y-1">
+      <Accordion type="multiple" defaultValue={["location", "sort", "stock", "pharmacy", "price"]} className="space-y-1">
+        <AccordionItem value="location" className="border rounded-lg px-3">
+          <AccordionTrigger className="text-sm font-medium py-3 hover:no-underline">Local Vendors</AccordionTrigger>
+          <AccordionContent className="pb-3 space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Find by Pincode</Label>
+              <Input 
+                placeholder="Enter pincode (e.g. 110001)" 
+                value={filters.location || ""}
+                onChange={(e) => update({ location: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              className="w-full h-8 text-xs gap-1"
+              onClick={() => {
+                if ("geolocation" in navigator) {
+                  navigator.geolocation.getCurrentPosition(
+                    // In a real app we'd reverse geocode here, for now mock:
+                    () => update({ location: "Current Location" }),
+                    () => update({ location: "" })
+                  );
+                }
+              }}
+            >
+              <MapPin className="h-3 w-3" />
+              Use My Location
+            </Button>
+          </AccordionContent>
+        </AccordionItem>
+
         <AccordionItem value="sort" className="border rounded-lg px-3">
           <AccordionTrigger className="text-sm font-medium py-3 hover:no-underline">Sort By</AccordionTrigger>
           <AccordionContent className="pb-3 space-y-2">
