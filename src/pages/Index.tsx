@@ -6,15 +6,15 @@ import CountUp from "@/components/CountUp";
 import FlowingMenu from '@/components/FlowingMenu';
 
 const demoItems = [
-  { link: 'https://www.1mg.com/', text: 'Tata 1mg', image: 'public/1mg.png' },
-  { link: 'https://www.pharmeasy.in/', text: 'Pharmeasy', image: 'public/pharmeasy.png' },
-  { link: 'https://www.netmeds.com/', text: 'Netmeds', image: 'public/netmeds.jpeg' },
-  { link: 'https://www.apollo247.com/', text: 'Apollo 24/7', image: 'public/apollo.png' },
-  { link: 'https://www.medplusmart.com/', text: 'Medplus', image: 'public/medplus.png' },
-  { link: 'https://www.flipkart.com/health-and-fitness/pr?sid=6bo%2Cm3p', text: 'Flipkart Health+', image: 'public/Flipkart.jpeg' },
-  { link: 'https://www.truemeds.in/', text: 'Truemeds', image: 'public/truemeds.jpeg' },
-  { link: 'https://www.zeno.health/home', text: 'Zeno', image: 'public/Zeno.jpg' },
-  { link: 'https://www.wellnessforever.com/', text: 'Wellness Forever', image: 'public/wellness_forever_logo.jpeg' }
+  { link: 'https://www.1mg.com/', text: 'Tata 1mg', image: '/1mg.png' },
+  { link: 'https://www.pharmeasy.in/', text: 'Pharmeasy', image: '/Pharmeasy.png' },
+  { link: 'https://www.netmeds.com/', text: 'Netmeds', image: '/netmeds.jpeg' },
+  { link: 'https://www.apollo247.com/', text: 'Apollo 24/7', image: '/apollo.png' },
+  { link: 'https://www.flipkart.com/health-and-fitness/pr?sid=6bo%2Cm3p', text: 'Flipkart Health+', image: '/Flipkart.jpeg' },
+  { link: 'https://www.truemeds.in/', text: 'Truemeds', image: '/truemeds.jpeg' },
+  { link: 'https://www.zeno.health/home', text: 'Zeno', image: '/Zeno.jpg' },
+  { link: 'https://www.medplusmart.com/', text: 'Medplus', image: '/Medplus.png' },
+  { link: 'https://www.wellnessforever.com/', text: 'Wellness Forever', image: '/wellness_forever_logo.jpeg' }
 ];
 
 const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementType; title: string; desc: string; index: number }) => {
