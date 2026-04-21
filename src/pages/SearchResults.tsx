@@ -30,6 +30,7 @@ const SearchResults = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const filtered = useMemo(() => {
+    const pincodeFilter = (filters.location || "").trim();
     let result = medicines.filter((m) => {
       const q = query.toLowerCase();
       if (q && !m.name.toLowerCase().includes(q) && !m.category.toLowerCase().includes(q)) return false;
@@ -42,6 +43,11 @@ const SearchResults = () => {
       if (filters.selectedPharmacies.length < pharmacies.length) {
         const hasSelectedPharmacy = m.prices.some((p) => filters.selectedPharmacies.includes(p.pharmacy));
         if (!hasSelectedPharmacy) return false;
+      }
+
+      // Pincode filter — only show medicines available at the entered pincode
+      if (/^\d{6}$/.test(pincodeFilter)) {
+        if (!m.prices.some((p) => p.pincode === pincodeFilter)) return false;
       }
 
       return true;
