@@ -80,10 +80,15 @@ const MedicineCard = ({ medicine, index = 0 }: Props) => {
             const isLowest = p.price === lowest.price && p.inStock;
             return (
               <div key={p.pharmacy} className={`flex items-center justify-between text-sm px-2.5 py-1.5 rounded-md transition-colors ${isLowest ? "bg-accent" : ""}`}>
-                <span className={`${!p.inStock ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                  {p.pharmacy}
-                </span>
-                <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <span className={`block truncate ${!p.inStock ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                    {p.pharmacy}
+                  </span>
+                  <span className="block text-[10px] text-muted-foreground truncate">
+                    {p.area} · {p.pincode}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
                   {!p.inStock && <span className="text-xs text-destructive">Out of stock</span>}
                   <span className={`font-semibold ${isLowest ? "text-primary" : "text-foreground"}`}>
                     ₹{p.price}
