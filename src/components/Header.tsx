@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useApp } from "@/contexts/AppContext";
 import { Badge } from "@/components/ui/badge";
 import SearchSuggestions from "@/components/SearchSuggestions";
+import ProfileMenu from "@/components/ProfileMenu";
 
 const Header = () => {
   const { isDark, toggleTheme, wishlist, setAuthModal, isLoggedIn } = useApp();
