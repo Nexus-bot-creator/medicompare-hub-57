@@ -23,6 +23,8 @@ const App = () => (
         <BrowserRouter>
           <Header />
           <AuthModal />
+          <EditProfileModal />
+          <ProfileGuard />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/search" element={<SearchResults />} />
