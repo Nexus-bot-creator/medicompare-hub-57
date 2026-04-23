@@ -12,9 +12,11 @@ import { getLowestPrice, getSavingsPercent } from "@/lib/mock-data";
 interface Props {
   medicine: Medicine;
   index?: number;
+  sortBy?: "low" | "high"; // You added this perfectly
 }
 
-const MedicineCard = ({ medicine, index = 0 }: Props) => {
+// 1. Added sortBy="low" here!
+const MedicineCard = ({ medicine, index = 0, sortBy = "low" }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -26,11 +28,18 @@ const MedicineCard = ({ medicine, index = 0 }: Props) => {
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
+
   const { toggleWishlist, isInWishlist, addPriceAlert } = useApp();
   const navigate = useNavigate();
   const lowest = getLowestPrice(medicine.prices);
   const savings = getSavingsPercent(medicine.prices);
   const inWishlist = isInWishlist(medicine.id);
+
+  // 2. Added the sorting logic! 
+  // We make a copy of the prices array so we don't mutate the original data
+  const sortedPrices = [...medicine.prices].sort((a, b) => {
+    return sortBy === "low" ? a.price - b.price : b.price - a.price;
+  });
 
   const handleWishlist = () => {
     toggleWishlist(medicine.id);
@@ -76,7 +85,8 @@ const MedicineCard = ({ medicine, index = 0 }: Props) => {
 
         {/* Price table */}
         <div className="space-y-1.5 mb-4">
-          {medicine.prices.map((p) => {
+          {/* 3. Changed medicine.prices.map to sortedPrices.map! */}
+          {sortedPrices.map((p) => {
             const isLowest = p.price === lowest.price && p.inStock;
             return (
               <div key={p.pharmacy} className={`flex items-center justify-between text-sm px-2.5 py-1.5 rounded-md transition-colors ${isLowest ? "bg-accent" : ""}`}>

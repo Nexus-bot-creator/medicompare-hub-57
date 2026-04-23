@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import MedicineCard from "@/components/MedicineCard";
 import FilterSidebar from "@/components/FilterSidebar";
-import { medicines, getLowestPrice, pharmacies } from "@/lib/mock-data";
+// Notice we removed 'medicines' from this import, but kept the types/helpers!
+import { getLowestPrice, pharmacies, type Medicine } from "@/lib/mock-data"; 
 
 interface Filters {
   sortBy: "low" | "high";
@@ -29,30 +30,64 @@ const SearchResults = () => {
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    const pincodeFilter = (filters.location || "").trim();
-    let result = medicines.filter((m) => {
-      const q = query.toLowerCase();
-      if (q && !m.name.toLowerCase().includes(q) && !m.category.toLowerCase().includes(q)) return false;
+  // --- NEW: React State for Django Data ---
+  const [liveMedicines, setLiveMedicines] = useState<Medicine[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // --- NEW: The Bridge to Django ---
+  useEffect(() => {
+    const fetchMedicines = async () => {
+      setIsLoading(true);
+      try {
+        let url = `http://127.0.0.1:8000/api/medicines/search/?q=${query}`;
+        
+        // If user typed a valid 6-digit pincode, send it to Django!
+        const pincode = (filters.location || "").trim();
+        if (/^\d{6}$/.test(pincode)) {
+          url += `&pincode=${pincode}`;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Failed to fetch");
+        
+        const data = await response.json();
+        setLiveMedicines(data);
+      } catch (error) {
+        console.error("Error fetching from Django:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Debounce the fetch so it doesn't spam the server on every keystroke
+    const timeoutId = setTimeout(() => fetchMedicines(), 300);
+    return () => clearTimeout(timeoutId);
+  }, [query, filters.location]); // Re-run when search bar or pincode changes
+
+  // --- UPDATED: Client-side filtering ---
+  const filtered = useMemo(() => {
+    // We filter the liveMedicines now, not the mock data!
+    let result = liveMedicines.filter((m) => {
+      // Note: We removed the search query and pincode filters from here 
+      // because our Django backend is already handling that perfectly!
+
+      // 1. Price Range Filter
       const lowestPrice = getLowestPrice(m.prices).price;
       if (lowestPrice < filters.priceRange[0] || lowestPrice > filters.priceRange[1]) return false;
 
+      // 2. In Stock Filter
       if (filters.inStockOnly && !m.prices.some((p) => p.inStock)) return false;
 
+      // 3. Pharmacy Filter
       if (filters.selectedPharmacies.length < pharmacies.length) {
         const hasSelectedPharmacy = m.prices.some((p) => filters.selectedPharmacies.includes(p.pharmacy));
         if (!hasSelectedPharmacy) return false;
       }
 
-      // Pincode filter — only show medicines available at the entered pincode
-      if (/^\d{6}$/.test(pincodeFilter)) {
-        if (!m.prices.some((p) => p.pincode === pincodeFilter)) return false;
-      }
-
       return true;
     });
 
+    // 4. Sorting Logic
     result.sort((a, b) => {
       const aPrice = getLowestPrice(a.prices).price;
       const bPrice = getLowestPrice(b.prices).price;
@@ -60,7 +95,7 @@ const SearchResults = () => {
     });
 
     return result;
-  }, [query, filters]);
+  }, [liveMedicines, filters]); // Re-run when live data or filters change
 
   return (
     <div className="min-h-screen pt-20 pb-12">
@@ -71,7 +106,9 @@ const SearchResults = () => {
             <h1 className="text-2xl font-bold text-foreground">
               {query ? `Results for "${query}"` : "All Medicines"}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">{filtered.length} medicines found</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {isLoading ? "Searching..." : `${filtered.length} medicines found`}
+            </p>
           </div>
 
           {/* Mobile filter trigger */}
@@ -110,7 +147,15 @@ const SearchResults = () => {
 
           {/* Results grid */}
           <div className="flex-1">
-            {filtered.length === 0 ? (
+            {isLoading ? (
+               // Loading State
+               <div className="flex justify-center items-center py-20">
+                 <div className="animate-pulse flex flex-col items-center">
+                    <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-muted-foreground">Fetching live data from PharmaPoint...</p>
+                 </div>
+               </div>
+            ) : filtered.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-lg text-muted-foreground">No medicines found matching your criteria.</p>
                 <Button variant="outline" className="mt-4 rounded-lg" onClick={() => setFilters(defaultFilters)}>
@@ -120,7 +165,7 @@ const SearchResults = () => {
             ) : (
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filtered.map((m, i) => (
-                  <MedicineCard key={m.id} medicine={m} index={i} />
+                  <MedicineCard key={m.id} medicine={m} index={i} sortBy={filters.sortBy} />
                 ))}
               </div>
             )}
