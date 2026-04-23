@@ -11,8 +11,12 @@ const ProfileGuard = () => {
   useEffect(() => {
     if (!isLoggedIn || isProfileLoading || !userProfile) return;
     const valid = /^\d{6}$/.test(userProfile.pincode ?? "");
-    if (!valid && !editProfileOpen) {
+    // Only auto-prompt once per user; if they've dismissed/saved before, don't nag again.
+    const dismissedKey = `profilePromptShown:${userProfile.email || userProfile.name || "anon"}`;
+    const alreadyShown = typeof window !== "undefined" && localStorage.getItem(dismissedKey) === "true";
+    if (!valid && !editProfileOpen && !alreadyShown) {
       setEditProfileOpen(true);
+      try { localStorage.setItem(dismissedKey, "true"); } catch { /* ignore */ }
     }
   }, [isLoggedIn, isProfileLoading, userProfile, editProfileOpen, setEditProfileOpen]);
 
