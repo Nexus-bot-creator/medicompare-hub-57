@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/contexts/AppContext";
-import { LayoutDashboard, LogOut, MapPin, Mail, Phone, Pencil, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, LogOut, MapPin, Phone, Pencil, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const initialsOf = (name?: string) => {
@@ -52,7 +52,7 @@ const ProfileMenu = () => {
       <PopoverContent
         align="end"
         sideOffset={10}
-        className="w-[min(92vw,20rem)] p-0 rounded-2xl border-border/60 shadow-xl bg-background/70 backdrop-blur-xl backdrop-saturate-150 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+        className="w-[min(92vw,20rem)] p-0 rounded-2xl border border-white/30 dark:border-white/10 shadow-2xl bg-white/20 dark:bg-white/5 backdrop-blur-2xl backdrop-saturate-200 ring-1 ring-white/10 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
       >
         {/* Header */}
         <div className="p-5 border-b border-border/60 bg-gradient-to-br from-primary/10 via-transparent to-transparent rounded-t-2xl">
@@ -74,9 +74,9 @@ const ProfileMenu = () => {
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-foreground truncate">{userProfile?.name || "Unnamed user"}</p>
-                <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                  <Mail className="h-3 w-3 shrink-0" />
-                  {userProfile?.email || "—"}
+                <p className="text-xs text-foreground/80 truncate flex items-center gap-1">
+                  <Phone className="h-3 w-3 shrink-0" />
+                  {userProfile?.phone || "Phone not set"}
                 </p>
               </div>
             </div>
@@ -158,14 +158,14 @@ const DetailRow = ({
   muted?: boolean;
   warning?: boolean;
 }) => (
-  <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-muted/60 transition-colors">
-    <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wide">
+  <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-white/30 dark:hover:bg-white/10 transition-colors">
+    <div className="flex items-center gap-2 text-foreground/70 text-xs uppercase tracking-wide font-medium">
       {icon}
       <span>{label}</span>
     </div>
     <span
-      className={`text-sm font-medium truncate max-w-[55%] text-right ${
-        warning ? "text-destructive" : muted ? "text-muted-foreground" : "text-foreground"
+      className={`text-sm font-semibold truncate max-w-[55%] text-right ${
+        warning ? "text-destructive" : "text-foreground"
       }`}
     >
       {value}

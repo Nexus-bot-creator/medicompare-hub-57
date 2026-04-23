@@ -37,19 +37,10 @@ const EditProfileModal = () => {
     setEditProfileOpen(false);
   };
 
-  // Pincode is mandatory: prevent dismiss when missing
-  const requirePincode = !userProfile?.pincode || !/^\d{6}$/.test(userProfile.pincode);
-
   return (
     <Dialog
       open={editProfileOpen}
-      onOpenChange={(open) => {
-        if (!open && requirePincode) {
-          toast.error("Please set your pincode to continue");
-          return;
-        }
-        setEditProfileOpen(open);
-      }}
+      onOpenChange={(open) => setEditProfileOpen(open)}
     >
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
@@ -63,10 +54,6 @@ const EditProfileModal = () => {
           <div className="space-y-2">
             <Label htmlFor="p-name">Name</Label>
             <Input id="p-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="rounded-lg" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="p-email">Email</Label>
-            <Input id="p-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="rounded-lg" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="p-phone">Phone</Label>
