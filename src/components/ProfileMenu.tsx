@@ -158,14 +158,14 @@ const DetailRow = ({
   muted?: boolean;
   warning?: boolean;
 }) => (
-  <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-white/30 dark:hover:bg-white/10 transition-colors">
-    <div className="flex items-center gap-2 text-foreground/70 text-xs uppercase tracking-wide font-medium">
-      {icon}
-      <span>{label}</span>
+  <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-white/40 dark:hover:bg-white/10 transition-colors">
+    <div className="flex items-center gap-2 text-xs uppercase tracking-wide font-medium">
+      <span className="text-[#188B7F] dark:text-[#17CFBC]">{icon}</span>
+      <span className="text-hero-gradient">{label}</span>
     </div>
     <span
       className={`text-sm font-semibold truncate max-w-[55%] text-right ${
-        warning ? "text-destructive" : "text-foreground"
+        warning ? "text-destructive" : "text-hero-gradient"
       }`}
     >
       {value}
