@@ -99,9 +99,7 @@ const Header = () => {
           </Link>
 
           {isLoggedIn ? (
-            <Link to="/dashboard">
-              <Button variant="outline" className="rounded-full px-4 h-9 text-sm">Dashboard</Button>
-            </Link>
+            <ProfileMenu />
           ) : (
             <>
               <Button variant="outline" className="rounded-full px-4 h-9 text-sm" onClick={() => setAuthModal("login")}>
