@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { PriceAlert } from "@/lib/mock-data";
 
+export interface UserProfile {
+  name: string;
+  email: string;
+  phone: string;
+  pincode: string;
+  avatarUrl?: string;
+}
+
 interface AppContextType {
   // Theme
   isDark: boolean;
@@ -19,6 +27,15 @@ interface AppContextType {
   // Mock logged in
   isLoggedIn: boolean;
   setIsLoggedIn: (v: boolean) => void;
+  // User profile
+  userProfile: UserProfile | null;
+  setUserProfile: (p: UserProfile | null) => void;
+  updateUserProfile: (patch: Partial<UserProfile>) => void;
+  isProfileLoading: boolean;
+  logout: () => void;
+  // Edit profile modal
+  editProfileOpen: boolean;
+  setEditProfileOpen: (v: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
