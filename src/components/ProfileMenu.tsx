@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/contexts/AppContext";
-import { LayoutDashboard, LogOut, MapPin, Mail, Phone, Pencil, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, LogOut, MapPin, Phone, Pencil, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const initialsOf = (name?: string) => {
