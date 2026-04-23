@@ -52,7 +52,7 @@ const ProfileMenu = () => {
       <PopoverContent
         align="end"
         sideOffset={10}
-        className="w-[min(92vw,20rem)] p-0 rounded-2xl border border-white/30 dark:border-white/10 shadow-2xl bg-white/20 dark:bg-white/5 backdrop-blur-2xl backdrop-saturate-200 ring-1 ring-white/10 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+        className="w-[min(92vw,20rem)] p-0 rounded-2xl border border-white/40 dark:border-white/10 shadow-2xl bg-[#D9F3F0]/70 dark:bg-white/5 backdrop-blur-2xl backdrop-saturate-200 ring-1 ring-white/20 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
       >
         {/* Header */}
         <div className="p-5 border-b border-border/60 bg-gradient-to-br from-primary/10 via-transparent to-transparent rounded-t-2xl">
@@ -73,10 +73,10 @@ const ProfileMenu = () => {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-foreground truncate">{userProfile?.name || "Unnamed user"}</p>
-                <p className="text-xs text-foreground/80 truncate flex items-center gap-1">
-                  <Phone className="h-3 w-3 shrink-0" />
-                  {userProfile?.phone || "Phone not set"}
+                <p className="font-semibold truncate text-hero-gradient">{userProfile?.name || "Unnamed user"}</p>
+                <p className="text-xs truncate flex items-center gap-1">
+                  <Phone className="h-3 w-3 shrink-0 text-[#188B7F] dark:text-[#17CFBC]" />
+                  <span className="text-hero-gradient font-medium">{userProfile?.phone || "Phone not set"}</span>
                 </p>
               </div>
             </div>
@@ -158,14 +158,14 @@ const DetailRow = ({
   muted?: boolean;
   warning?: boolean;
 }) => (
-  <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-white/30 dark:hover:bg-white/10 transition-colors">
-    <div className="flex items-center gap-2 text-foreground/70 text-xs uppercase tracking-wide font-medium">
-      {icon}
-      <span>{label}</span>
+  <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-white/40 dark:hover:bg-white/10 transition-colors">
+    <div className="flex items-center gap-2 text-xs uppercase tracking-wide font-medium">
+      <span className="text-[#188B7F] dark:text-[#17CFBC]">{icon}</span>
+      <span className="text-hero-gradient">{label}</span>
     </div>
     <span
       className={`text-sm font-semibold truncate max-w-[55%] text-right ${
-        warning ? "text-destructive" : "text-foreground"
+        warning ? "text-destructive" : "text-hero-gradient"
       }`}
     >
       {value}
