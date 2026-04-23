@@ -148,9 +148,7 @@ const Header = () => {
             </Link>
           </div>
           {isLoggedIn ? (
-            <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
-              <Button variant="outline" className="w-full rounded-full">Dashboard</Button>
-            </Link>
+            <div className="pt-1"><ProfileMenu /></div>
           ) : (
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1 rounded-full" onClick={() => { setAuthModal("login"); setMobileOpen(false); }}>
