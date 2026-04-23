@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useApp } from "@/contexts/AppContext";
 import { Badge } from "@/components/ui/badge";
 import SearchSuggestions from "@/components/SearchSuggestions";
+import ProfileMenu from "@/components/ProfileMenu";
 
 const Header = () => {
   const { isDark, toggleTheme, wishlist, setAuthModal, isLoggedIn } = useApp();
@@ -98,9 +99,7 @@ const Header = () => {
           </Link>
 
           {isLoggedIn ? (
-            <Link to="/dashboard">
-              <Button variant="outline" className="rounded-full px-4 h-9 text-sm">Dashboard</Button>
-            </Link>
+            <ProfileMenu />
           ) : (
             <>
               <Button variant="outline" className="rounded-full px-4 h-9 text-sm" onClick={() => setAuthModal("login")}>
@@ -149,9 +148,7 @@ const Header = () => {
             </Link>
           </div>
           {isLoggedIn ? (
-            <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
-              <Button variant="outline" className="w-full rounded-full">Dashboard</Button>
-            </Link>
+            <div className="pt-1"><ProfileMenu /></div>
           ) : (
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1 rounded-full" onClick={() => { setAuthModal("login"); setMobileOpen(false); }}>

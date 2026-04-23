@@ -5,6 +5,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
 import Header from "@/components/Header";
 import AuthModal from "@/components/AuthModal";
+import EditProfileModal from "@/components/EditProfileModal";
+import ProfileGuard from "@/components/ProfileGuard";
 import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
 import Dashboard from "./pages/Dashboard";
@@ -21,6 +23,8 @@ const App = () => (
         <BrowserRouter>
           <Header />
           <AuthModal />
+          <EditProfileModal />
+          <ProfileGuard />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/search" element={<SearchResults />} />
