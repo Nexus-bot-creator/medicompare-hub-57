@@ -160,6 +160,8 @@ const MenuItem: React.FC<MenuItemProps> = ({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         style={{ color: textColor }}
+        target="_blank"             // <--- Add this
+        rel="noopener noreferrer"   // <--- Add this for security
       >
         {text}
       </a>
