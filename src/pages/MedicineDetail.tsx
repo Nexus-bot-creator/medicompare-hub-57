@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Bell, ExternalLink, Star, TrendingDown, Package, Info, MapPin } from "lucide-react";
+import { ArrowLeft, Heart, Bell, ExternalLink, Star, TrendingDown, Package, Info, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,71 +9,94 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
-import { medicines, getLowestPrice, getHighestPrice, getSavingsPercent } from "@/lib/mock-data";
-
-const generatePriceHistory = (basePrice: number, pharmacy: string) => {
-  const months = ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"];
-  return months.map((month, i) => ({
-    month,
-    price: Math.round(basePrice * (0.85 + Math.random() * 0.3)),
-  }));
-};
-
-const pharmacyReviews: Record<string, { rating: number; count: number; delivery: string; returns: string }> = {
-  PharmEasy: { rating: 4.3, count: 12400, delivery: "1-2 days", returns: "7-day return" },
-  Netmeds: { rating: 4.1, count: 9800, delivery: "2-3 days", returns: "10-day return" },
-  "1mg": { rating: 4.5, count: 15200, delivery: "1-3 days", returns: "7-day return" },
-  "Apollo Pharmacy": { rating: 4.4, count: 11300, delivery: "Same day", returns: "5-day return" },
-  MedPlus: { rating: 3.9, count: 7600, delivery: "2-4 days", returns: "7-day return" },
-};
-
-const dosageInfo: Record<string, { usage: string; sideEffects: string[]; warnings: string[]; howToTake: string }> = {
-  Paracetamol: { usage: "Used for mild to moderate pain relief and fever reduction. Commonly prescribed for headaches, muscle aches, arthritis, backache, toothaches, colds, and fevers.", sideEffects: ["Nausea", "Allergic skin rash", "Liver damage (overdose)"], warnings: ["Do not exceed 4g per day", "Avoid with alcohol", "Consult doctor if pregnant"], howToTake: "Take with or without food. Swallow whole with water. Space doses at least 4 hours apart." },
-  Amoxicillin: { usage: "A penicillin-type antibiotic used to treat bacterial infections including ear, nose, throat, urinary tract, and skin infections.", sideEffects: ["Diarrhea", "Nausea", "Skin rash", "Vomiting"], warnings: ["Complete the full course", "Inform doctor of penicillin allergy", "May reduce effectiveness of oral contraceptives"], howToTake: "Take at evenly spaced intervals. Can be taken with or without food. Complete the entire prescribed course." },
-  Metformin: { usage: "First-line medication for Type 2 diabetes. Helps control blood sugar levels by improving insulin sensitivity and reducing glucose production.", sideEffects: ["Nausea", "Diarrhea", "Stomach upset", "Metallic taste"], warnings: ["Monitor kidney function", "Avoid excessive alcohol", "Inform doctor before surgery or contrast dye procedures"], howToTake: "Take with meals to reduce stomach upset. Swallow whole; do not crush extended-release tablets." },
-};
-
-const getDefaultDosageInfo = (name: string) => ({
-  usage: `${name} is prescribed for its specific therapeutic effects. Consult your doctor or pharmacist for detailed usage information tailored to your condition.`,
-  sideEffects: ["Nausea", "Headache", "Dizziness", "Allergic reactions (rare)"],
-  warnings: ["Follow prescribed dosage", "Consult doctor if symptoms persist", "Inform doctor of other medications"],
-  howToTake: "Take as directed by your physician. Read the patient information leaflet before starting.",
-});
 
 const MedicineDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { toggleWishlist, isInWishlist, addPriceAlert } = useApp();
 
-  const medicine = medicines.find((m) => m.id === id);
-  if (!medicine) {
+  // --- NEW: Dynamic State ---
+  const [medicine, setMedicine] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  
+  // State for the "Find Locally" feature
+  const [searchInput, setSearchInput] = useState(""); 
+  const [activePincode, setActivePincode] = useState("");
+
+  // --- NEW: Fetch Data from Django ---
+  useEffect(() => {
+    const fetchMedicine = async () => {
+      setLoading(true);
+      setError(false);
+      try {
+        // If a pincode is active, append it to the URL!
+        let url = `http://127.0.0.1:8000/api/medicines/${id}/`;
+        if (activePincode) {
+          url += `?pincode=${activePincode}`;
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Not found");
+        const data = await res.json();
+        setMedicine(data);
+      } catch (err) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMedicine();
+  }, [id, activePincode]); // Re-run if ID or Pincode changes!
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-24 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !medicine) {
     return (
       <div className="min-h-screen pt-24 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-foreground mb-2">Medicine Not Found</h2>
+          <p className="text-muted-foreground mb-4">We couldn't find the details for this medicine.</p>
           <Link to="/search"><Button variant="outline">Back to Search</Button></Link>
         </div>
       </div>
     );
   }
 
-  const lowest = getLowestPrice(medicine.prices);
-  const highest = getHighestPrice(medicine.prices);
-  const savings = getSavingsPercent(medicine.prices);
-  const inWishlist = isInWishlist(medicine.id);
-  const info = dosageInfo[medicine.name] || getDefaultDosageInfo(medicine.name);
+  // --- Calculations based on real data ---
+  const inWishlist = isInWishlist(medicine.id.toString());
+  
+  // Find lowest price
+  const validPrices = medicine.prices.filter((p: any) => p.inStock);
+  const lowestPriceObj = validPrices.length > 0 
+    ? validPrices.reduce((prev: any, curr: any) => prev.price < curr.price ? prev : curr) 
+    : medicine.prices[0];
+  
+  const lowestPrice = lowestPriceObj?.price || 0;
+  const lowestPharmacy = lowestPriceObj?.pharmacy || "Unknown";
 
-  const priceHistoryData = medicine.prices.map((p) => ({
-    pharmacy: p.pharmacy,
-    history: generatePriceHistory(p.price, p.pharmacy),
-  }));
+  // Calculate Savings (Highest Price vs Lowest Price)
+  const highestPrice = Math.max(...medicine.prices.map((p: any) => p.price));
+  const savings = highestPrice > lowestPrice ? Math.round(((highestPrice - lowestPrice) / highestPrice) * 100) : 0;
 
-  const comparisonData = medicine.prices.map((p) => ({
+  // Format strings into arrays for the UI lists
+  const sideEffectsList = medicine.side_effects ? medicine.side_effects.split(",").map((s: string) => s.trim()) : ["No data available"];
+  const warningsList = medicine.warnings ? medicine.warnings.split(",").map((w: string) => w.trim()) : ["No data available"];
+
+  // Chart Data mappings
+  const comparisonData = medicine.prices.map((p: any) => ({
     pharmacy: p.pharmacy.length > 10 ? p.pharmacy.slice(0, 10) + "…" : p.pharmacy,
     price: p.price,
-    fill: p.price === lowest.price && p.inStock ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.3)",
+    fill: p.price === lowestPrice && p.inStock ? "hsl(var(--primary))" : "hsl(var(--muted-foreground) / 0.3)",
   }));
 
   const chartConfig = {
@@ -80,22 +104,22 @@ const MedicineDetail = () => {
   };
 
   const handleWishlist = () => {
-    toggleWishlist(medicine.id);
+    toggleWishlist(medicine.id.toString());
     toast.success(inWishlist ? "Removed from Wishlist" : "Added to Wishlist!");
   };
 
   const handleAlert = () => {
     addPriceAlert({
       id: `alert-${medicine.id}`,
-      medicineId: medicine.id,
-      targetPrice: Math.round(lowest.price * 0.9),
-      currentPrice: lowest.price,
+      medicineId: medicine.id.toString(),
+      targetPrice: Math.round(lowestPrice * 0.9),
+      currentPrice: lowestPrice,
       medicineName: medicine.name,
       dosage: medicine.dosage,
       status: "active",
     });
     toast.success("Price Alert Set!", {
-      description: `We'll notify you when ${medicine.name} drops below ₹${Math.round(lowest.price * 0.9)}`,
+      description: `We'll notify you when ${medicine.name} drops below ₹${Math.round(lowestPrice * 0.9)}`,
     });
   };
 
@@ -140,33 +164,40 @@ const MedicineDetail = () => {
 
                 {/* Price comparison table */}
                 <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <TrendingDown className="h-4 w-4 text-primary" /> Price Comparison
+                  <TrendingDown className="h-4 w-4 text-primary" /> Live Price Comparison
                 </h3>
-                <div className="space-y-2">
-                  {medicine.prices.map((p) => {
-                    const isLowest = p.price === lowest.price && p.inStock;
-                    return (
-                      <div key={p.pharmacy} className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${isLowest ? "bg-accent border border-primary/20" : "bg-muted/50"}`}>
-                        <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${p.inStock ? "bg-green-500" : "bg-destructive"}`} />
-                          <div>
-                            <span className={`font-medium ${!p.inStock ? "text-muted-foreground line-through" : "text-foreground"}`}>{p.pharmacy}</span>
-                            {isLowest && <Badge className="ml-2 bg-primary text-primary-foreground text-[10px] px-1.5 py-0">BEST</Badge>}
+                
+                {medicine.prices.length === 0 ? (
+                   <div className="p-4 text-center bg-muted/50 rounded-xl text-muted-foreground">
+                     No pharmacies found matching this pincode.
+                   </div>
+                ) : (
+                  <div className="space-y-2">
+                    {medicine.prices.map((p: any) => {
+                      const isLowest = p.price === lowestPrice && p.inStock;
+                      return (
+                        <div key={p.pharmacy} className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${isLowest ? "bg-accent border border-primary/20" : "bg-muted/50"}`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${p.inStock ? "bg-green-500" : "bg-destructive"}`} />
+                            <div>
+                              <span className={`font-medium ${!p.inStock ? "text-muted-foreground line-through" : "text-foreground"}`}>{p.pharmacy}</span>
+                              {isLowest && <Badge className="ml-2 bg-primary text-primary-foreground text-[10px] px-1.5 py-0">BEST</Badge>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {!p.inStock && <span className="text-xs text-destructive">Out of stock</span>}
+                            <span className={`text-lg font-bold ${isLowest ? "text-primary" : "text-foreground"}`}>₹{p.price}</span>
+                            {p.inStock && (
+                              <Button size="sm" variant={isLowest ? "default" : "outline"} className="rounded-lg gap-1 h-8 text-xs">
+                                <ExternalLink className="h-3 w-3" /> Buy
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          {!p.inStock && <span className="text-xs text-destructive">Out of stock</span>}
-                          <span className={`text-lg font-bold ${isLowest ? "text-primary" : "text-foreground"}`}>₹{p.price}</span>
-                          {p.inStock && (
-                            <Button size="sm" variant={isLowest ? "default" : "outline"} className="rounded-lg gap-1 h-8 text-xs">
-                              <ExternalLink className="h-3 w-3" /> Buy
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -177,8 +208,8 @@ const MedicineDetail = () => {
               <CardContent className="p-5">
                 <div className="text-center mb-4">
                   <p className="text-sm text-muted-foreground">Lowest Price</p>
-                  <p className="text-4xl font-extrabold text-primary">₹{lowest.price}</p>
-                  <p className="text-sm text-muted-foreground">at {lowest.pharmacy}</p>
+                  <p className="text-4xl font-extrabold text-primary">₹{lowestPrice}</p>
+                  <p className="text-sm text-muted-foreground">at {lowestPharmacy}</p>
                 </div>
                 <div className="space-y-2">
                   <Button className="w-full rounded-xl gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
@@ -205,7 +236,7 @@ const MedicineDetail = () => {
                   <div className="flex justify-between"><span className="text-muted-foreground">Form</span><span className="text-foreground font-medium">{medicine.form}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Dosage</span><span className="text-foreground font-medium">{medicine.dosage}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Manufacturer</span><span className="text-foreground font-medium">{medicine.manufacturer}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Available at</span><span className="text-foreground font-medium">{medicine.prices.filter(p => p.inStock).length} pharmacies</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Available at</span><span className="text-foreground font-medium">{medicine.prices.filter((p:any) => p.inStock).length} pharmacies</span></div>
                 </div>
               </CardContent>
             </Card>
@@ -219,30 +250,26 @@ const MedicineDetail = () => {
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">Check local vendor availability by pincode:</p>
                     <div className="flex gap-2">
-                      <Input placeholder="Pincode" className="h-9 text-sm" />
+                      <Input 
+                        placeholder="e.g. 110001" 
+                        className="h-9 text-sm" 
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                      />
                       <Button variant="secondary" className="h-9 px-3 shrink-0" onClick={() => {
-                        toast.success("Searching local vendors...", {
-                          description: "Hold on while we find pharmacies near this pincode."
-                        });
+                        setActivePincode(searchInput);
+                        toast.success(`Searching vendors for ${searchInput}...`);
                       }}>Check</Button>
                     </div>
                   </div>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or</span>
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full h-9 text-xs gap-1" onClick={() => {
-                    toast.success("Location Access Requested", {
-                      description: "Finding pharmacies near you..."
-                    });
-                  }}>
-                    <MapPin className="h-3 w-3" />
-                    Use My Location
-                  </Button>
+                  {activePincode && (
+                    <Button variant="ghost" className="w-full h-8 text-xs text-destructive" onClick={() => {
+                        setSearchInput("");
+                        setActivePincode("");
+                    }}>
+                        Clear Filter
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -251,10 +278,10 @@ const MedicineDetail = () => {
 
         {/* Tabs section */}
         <Tabs defaultValue="history" className="space-y-4">
-          <TabsList className="bg-muted rounded-xl p-1 h-auto">
+          <TabsList className="bg-muted rounded-xl p-1 h-auto flex flex-wrap">
             <TabsTrigger value="history" className="rounded-lg data-[state=active]:bg-background px-4 py-2">Price History</TabsTrigger>
-            <TabsTrigger value="reviews" className="rounded-lg data-[state=active]:bg-background px-4 py-2">Pharmacy Reviews</TabsTrigger>
-            <TabsTrigger value="dosage" className="rounded-lg data-[state=active]:bg-background px-4 py-2">Dosage Info</TabsTrigger>
+            <TabsTrigger value="reviews" className="rounded-lg data-[state=active]:bg-background px-4 py-2">Pharmacy Logistics</TabsTrigger>
+            <TabsTrigger value="dosage" className="rounded-lg data-[state=active]:bg-background px-4 py-2">Medical Info</TabsTrigger>
           </TabsList>
 
           {/* Price History */}
@@ -267,7 +294,7 @@ const MedicineDetail = () => {
                 </CardHeader>
                 <CardContent>
                   <ChartContainer config={chartConfig} className="h-[280px] w-full">
-                    <LineChart data={priceHistoryData[0]?.history || []}>
+                    <LineChart data={medicine.price_history[0]?.history || []}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                       <XAxis dataKey="month" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
@@ -298,47 +325,43 @@ const MedicineDetail = () => {
             </div>
           </TabsContent>
 
-          {/* Pharmacy Reviews */}
+          {/* Pharmacy Reviews & Logistics */}
           <TabsContent value="reviews">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {medicine.prices.map((p) => {
-                const review = pharmacyReviews[p.pharmacy];
-                if (!review) return null;
-                return (
-                  <Card key={p.pharmacy} className="border border-border">
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-foreground">{p.pharmacy}</h4>
-                        <Badge variant="outline" className="text-xs">{p.inStock ? "In Stock" : "Out of Stock"}</Badge>
+              {medicine.prices.map((p: any) => (
+                <Card key={p.pharmacy} className="border border-border">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-foreground">{p.pharmacy}</h4>
+                      <Badge variant="outline" className="text-xs">{p.inStock ? "In Stock" : "Out of Stock"}</Badge>
+                    </div>
+                    <div className="flex items-center gap-1.5 mb-3">
+                      {renderStars(p.rating)}
+                      <span className="text-sm font-semibold text-foreground ml-1">{p.rating}</span>
+                      <span className="text-xs text-muted-foreground">({p.review_count.toLocaleString()})</span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Delivery</span>
+                        <span className="text-foreground font-medium">{p.delivery_time}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 mb-3">
-                        {renderStars(review.rating)}
-                        <span className="text-sm font-semibold text-foreground ml-1">{review.rating}</span>
-                        <span className="text-xs text-muted-foreground">({review.count.toLocaleString()})</span>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Returns</span>
+                        <span className="text-foreground font-medium">{p.return_policy}</span>
                       </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Delivery</span>
-                          <span className="text-foreground font-medium">{review.delivery}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Returns</span>
-                          <span className="text-foreground font-medium">{review.returns}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Price</span>
-                          <span className="text-foreground font-bold">₹{p.price}</span>
-                        </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Price</span>
+                        <span className="text-foreground font-bold">₹{p.price}</span>
                       </div>
-                      <Separator className="my-3" />
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Trust Score</p>
-                        <Progress value={review.rating * 20} className="h-2" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                    </div>
+                    <Separator className="my-3" />
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Trust Score</p>
+                      <Progress value={p.rating * 20} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </TabsContent>
 
@@ -352,10 +375,14 @@ const MedicineDetail = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{info.usage}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {medicine.usage || "No usage information available."}
+                  </p>
                   <Separator className="my-4" />
                   <h4 className="font-semibold text-foreground text-sm mb-2">How to Take</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{info.howToTake}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {medicine.how_to_take || "Consult your physician."}
+                  </p>
                 </CardContent>
               </Card>
 
@@ -366,7 +393,7 @@ const MedicineDetail = () => {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {info.sideEffects.map((effect) => (
+                      {sideEffectsList.map((effect: string) => (
                         <li key={effect} className="flex items-center gap-2 text-sm text-muted-foreground">
                           <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 shrink-0" />
                           {effect}
@@ -382,7 +409,7 @@ const MedicineDetail = () => {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {info.warnings.map((warning) => (
+                      {warningsList.map((warning: string) => (
                         <li key={warning} className="flex items-start gap-2 text-sm text-muted-foreground">
                           <div className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0 mt-1.5" />
                           {warning}

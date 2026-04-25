@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react"; // <-- NEW: Added for the loading spinner!
 
 const EditProfileModal = () => {
   const { editProfileOpen, setEditProfileOpen, userProfile, updateUserProfile } = useApp();
@@ -13,6 +14,9 @@ const EditProfileModal = () => {
   const [phone, setPhone] = useState("");
   const [pincode, setPincode] = useState("");
   const [errors, setErrors] = useState<{ pincode?: string; phone?: string }>({});
+  
+  // NEW: Add a loading state for the button
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (editProfileOpen && userProfile) {
@@ -24,23 +28,56 @@ const EditProfileModal = () => {
     }
   }, [editProfileOpen, userProfile]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // UPDATED: Made this an async function to talk to Django
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 1. Validation
     const nextErrors: typeof errors = {};
     if (!/^\d{6}$/.test(pincode)) nextErrors.pincode = "Pincode must be exactly 6 digits";
     if (phone && !/^\d{10}$/.test(phone)) nextErrors.phone = "Phone must be 10 digits";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
-    updateUserProfile({ name: name.trim(), email: email.trim(), phone, pincode });
-    toast.success("Profile updated");
-    setEditProfileOpen(false);
+    // 2. Send to Django
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) throw new Error("You must be logged in to update your profile.");
+
+      const response = await fetch("http://127.0.0.1:8000/api/auth/profile/", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // The VIP pass!
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone_number: phone,      // Mapping to Django's snake_case variable
+          default_pincode: pincode  // Mapping to Django's snake_case variable
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save profile to the server.");
+      }
+
+      // 3. If Django succeeds, update the React UI and close the modal!
+      updateUserProfile({ name: name.trim(), email: email.trim(), phone, pincode });
+      toast.success("Profile updated successfully!");
+      setEditProfileOpen(false);
+
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Dialog
       open={editProfileOpen}
-      onOpenChange={(open) => setEditProfileOpen(open)}
+      onOpenChange={(open) => !isLoading && setEditProfileOpen(open)} // Prevent closing while loading
     >
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
@@ -53,7 +90,7 @@ const EditProfileModal = () => {
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="space-y-2">
             <Label htmlFor="p-name">Name</Label>
-            <Input id="p-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="rounded-lg" />
+            <Input id="p-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="rounded-lg" disabled={isLoading} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="p-phone">Phone</Label>
@@ -64,6 +101,7 @@ const EditProfileModal = () => {
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
               placeholder="10-digit number"
               className="rounded-lg"
+              disabled={isLoading}
             />
             {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
           </div>
@@ -81,12 +119,13 @@ const EditProfileModal = () => {
               className="rounded-lg"
               aria-invalid={!!errors.pincode}
               aria-describedby="p-pincode-err"
+              disabled={isLoading}
             />
             {errors.pincode && <p id="p-pincode-err" className="text-xs text-destructive">{errors.pincode}</p>}
           </div>
 
-          <Button type="submit" className="w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
-            Save Profile
+          <Button type="submit" disabled={isLoading} className="w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Profile"}
           </Button>
         </form>
       </DialogContent>

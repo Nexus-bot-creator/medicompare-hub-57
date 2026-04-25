@@ -10,30 +10,29 @@ export interface UserProfile {
 }
 
 interface AppContextType {
-  // Theme
   isDark: boolean;
   toggleTheme: () => void;
-  // Wishlist
+  
   wishlist: string[];
   toggleWishlist: (id: string) => void;
   isInWishlist: (id: string) => boolean;
-  // Price Alerts
+  
   priceAlerts: PriceAlert[];
   addPriceAlert: (alert: PriceAlert) => void;
   removePriceAlert: (id: string) => void;
-  // Auth modal
+  
   authModal: "login" | "signup" | null;
   setAuthModal: (modal: "login" | "signup" | null) => void;
-  // Mock logged in
+  
   isLoggedIn: boolean;
   setIsLoggedIn: (v: boolean) => void;
-  // User profile
+  
   userProfile: UserProfile | null;
   setUserProfile: (p: UserProfile | null) => void;
   updateUserProfile: (patch: Partial<UserProfile>) => void;
   isProfileLoading: boolean;
   logout: () => void;
-  // Edit profile modal
+  
   editProfileOpen: boolean;
   setEditProfileOpen: (v: boolean) => void;
 }
@@ -54,13 +53,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     return false;
   });
+  
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
   const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    return localStorage.getItem("isLoggedIn") === "true";
+    return !!localStorage.getItem("access_token");
   });
+
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
     if (typeof window === "undefined") return null;
     try {
@@ -70,8 +74,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return null;
     }
   });
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
-  const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
@@ -79,48 +81,133 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [isDark]);
 
   useEffect(() => {
-    localStorage.setItem("isLoggedIn", isLoggedIn ? "true" : "false");
-  }, [isLoggedIn]);
-
-  useEffect(() => {
-    if (userProfile) {
-      localStorage.setItem("userProfile", JSON.stringify(userProfile));
-    } else {
-      localStorage.removeItem("userProfile");
-    }
+    if (userProfile) localStorage.setItem("userProfile", JSON.stringify(userProfile));
+    else localStorage.removeItem("userProfile");
   }, [userProfile]);
 
-  // Simulate fetching profile after login when none exists yet
+  // 1. UPDATED: Fetch Profile, Wishlist, and Alerts from Django when logged in!
   useEffect(() => {
-    if (isLoggedIn && !userProfile) {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
       setIsProfileLoading(true);
-      const t = setTimeout(() => {
-        setUserProfile({
-          name: "Guest User",
-          email: "guest@medipedia.app",
-          phone: "",
-          pincode: "",
-        });
+      try {
+        const headers = { "Authorization": `Bearer ${token}` };
+
+        // Fetch Profile
+        const profileRes = await fetch("http://127.0.0.1:8000/api/auth/profile/", { headers });
+        if (profileRes.ok) {
+          const data = await profileRes.json();
+          setUserProfile({
+            name: data.name || "User",
+            email: data.email,
+            phone: data.phone_number || "",
+            pincode: data.default_pincode || "",
+          });
+        } else if (profileRes.status === 401) {
+          logout();
+          return;
+        }
+
+        // Fetch Wishlist
+        const wishlistRes = await fetch("http://127.0.0.1:8000/api/user/wishlist/", { headers });
+        if (wishlistRes.ok) {
+          const wlData = await wishlistRes.json();
+          setWishlist(wlData);
+        }
+
+        // Fetch Price Alerts
+        const alertsRes = await fetch("http://127.0.0.1:8000/api/user/alerts/", { headers });
+        if (alertsRes.ok) {
+          const alertsData = await alertsRes.json();
+          setPriceAlerts(alertsData);
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch user data from Django:", error);
+      } finally {
         setIsProfileLoading(false);
-      }, 700);
-      return () => clearTimeout(t);
+      }
+    };
+
+    if (isLoggedIn) {
+      fetchUserData();
     }
-  }, [isLoggedIn, userProfile]);
+  }, [isLoggedIn]);
 
   const toggleTheme = useCallback(() => setIsDark((v) => !v), []);
 
-  const toggleWishlist = useCallback((id: string) => {
+  // 2. UPDATED: Send Wishlist toggles to Django
+  const toggleWishlist = useCallback(async (id: string) => {
+    // Optimistically update the UI instantly
     setWishlist((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      try {
+        await fetch("http://127.0.0.1:8000/api/user/wishlist/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ medicine_id: id })
+        });
+      } catch (error) {
+        console.error("Failed to sync wishlist with server", error);
+      }
+    }
   }, []);
 
   const isInWishlist = useCallback((id: string) => wishlist.includes(id), [wishlist]);
 
-  const addPriceAlert = useCallback((alert: PriceAlert) => {
+  // 3. UPDATED: Send New Price Alerts to Django
+  const addPriceAlert = useCallback(async (alert: PriceAlert) => {
+    // Optimistically update the UI
     setPriceAlerts((prev) => [...prev.filter((a) => a.medicineId !== alert.medicineId), alert]);
+
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/user/alerts/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            medicineId: alert.medicineId,
+            targetPrice: alert.targetPrice
+          })
+        });
+        const data = await res.json();
+        
+        // Update the fake React ID with the real Database ID so we can delete it later
+        if (res.ok) {
+          setPriceAlerts((prev) => prev.map((a) => a.medicineId === alert.medicineId ? { ...a, id: data.id } : a));
+        }
+      } catch (error) {
+        console.error("Failed to save price alert", error);
+      }
+    }
   }, []);
 
-  const removePriceAlert = useCallback((id: string) => {
+  // 4. UPDATED: Send Delete Alert commands to Django
+  const removePriceAlert = useCallback(async (id: string) => {
     setPriceAlerts((prev) => prev.filter((a) => a.id !== id));
+    
+    const token = localStorage.getItem("access_token");
+    if (token && !id.startsWith("alert-")) { // Don't delete fake IDs
+      try {
+        await fetch(`http://127.0.0.1:8000/api/user/alerts/${id}/`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+      } catch (error) {
+        console.error("Failed to delete alert", error);
+      }
+    }
   }, []);
 
   const updateUserProfile = useCallback((patch: Partial<UserProfile>) => {
@@ -129,11 +216,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   }, []);
 
+  // 5. UPDATED: Clear private data on logout
   const logout = useCallback(() => {
     setIsLoggedIn(false);
     setUserProfile(null);
+    setWishlist([]);    // Clear wishlist
+    setPriceAlerts([]); // Clear alerts
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    localStorage.removeItem("userProfile");
   }, []);
 
   return (
