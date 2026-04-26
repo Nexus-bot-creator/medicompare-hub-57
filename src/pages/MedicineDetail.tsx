@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Bell, ExternalLink, Star, TrendingDown, Package, Info, MapPin, Loader2 } from "lucide-react";
+import { ArrowLeft, Heart, Bell, ExternalLink, Star, TrendingDown, Package, Info, MapPin, Loader2, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,9 +15,9 @@ import { toast } from "sonner";
 
 const MedicineDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { toggleWishlist, isInWishlist, addPriceAlert } = useApp();
+  const { toggleWishlist, isInWishlist, addPriceAlert, userProfile } = useApp();
 
-  // --- NEW: Dynamic State ---
+  // --- Dynamic State ---
   const [medicine, setMedicine] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -26,13 +26,20 @@ const MedicineDetail = () => {
   const [searchInput, setSearchInput] = useState(""); 
   const [activePincode, setActivePincode] = useState("");
 
-  // --- NEW: Fetch Data from Django ---
+  // --- Auto-fill Smart Profile Pincode ---
+  useEffect(() => {
+    if (userProfile?.default_pincode && !activePincode) {
+      setSearchInput(userProfile.default_pincode);
+      setActivePincode(userProfile.default_pincode);
+    }
+  }, [userProfile, activePincode]);
+
+  // --- Fetch Data from Django ---
   useEffect(() => {
     const fetchMedicine = async () => {
       setLoading(true);
       setError(false);
       try {
-        // If a pincode is active, append it to the URL!
         let url = `http://127.0.0.1:8000/api/medicines/${id}/`;
         if (activePincode) {
           url += `?pincode=${activePincode}`;
@@ -50,7 +57,7 @@ const MedicineDetail = () => {
     };
 
     fetchMedicine();
-  }, [id, activePincode]); // Re-run if ID or Pincode changes!
+  }, [id, activePincode]);
 
   if (loading) {
     return (
@@ -72,10 +79,8 @@ const MedicineDetail = () => {
     );
   }
 
-  // --- Calculations based on real data ---
+  // --- Calculations ---
   const inWishlist = isInWishlist(medicine.id.toString());
-  
-  // Find lowest price
   const validPrices = medicine.prices.filter((p: any) => p.inStock);
   const lowestPriceObj = validPrices.length > 0 
     ? validPrices.reduce((prev: any, curr: any) => prev.price < curr.price ? prev : curr) 
@@ -84,15 +89,12 @@ const MedicineDetail = () => {
   const lowestPrice = lowestPriceObj?.price || 0;
   const lowestPharmacy = lowestPriceObj?.pharmacy || "Unknown";
 
-  // Calculate Savings (Highest Price vs Lowest Price)
   const highestPrice = Math.max(...medicine.prices.map((p: any) => p.price));
   const savings = highestPrice > lowestPrice ? Math.round(((highestPrice - lowestPrice) / highestPrice) * 100) : 0;
 
-  // Format strings into arrays for the UI lists
   const sideEffectsList = medicine.side_effects ? medicine.side_effects.split(",").map((s: string) => s.trim()) : ["No data available"];
   const warningsList = medicine.warnings ? medicine.warnings.split(",").map((w: string) => w.trim()) : ["No data available"];
 
-  // Chart Data mappings
   const comparisonData = medicine.prices.map((p: any) => ({
     pharmacy: p.pharmacy.length > 10 ? p.pharmacy.slice(0, 10) + "…" : p.pharmacy,
     price: p.price,
@@ -132,7 +134,6 @@ const MedicineDetail = () => {
   return (
     <div className="min-h-screen pt-20 pb-12">
       <div className="container mx-auto max-w-6xl px-4">
-        {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 pt-4">
           <Link to="/search" className="hover:text-primary transition-colors flex items-center gap-1">
             <ArrowLeft className="h-4 w-4" /> Back to results
@@ -141,9 +142,7 @@ const MedicineDetail = () => {
           <span className="text-foreground">{medicine.name}</span>
         </div>
 
-        {/* Top section */}
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {/* Medicine Info */}
           <div className="lg:col-span-2">
             <Card className="border border-border">
               <CardContent className="p-6">
@@ -162,7 +161,6 @@ const MedicineDetail = () => {
 
                 <Separator className="my-4" />
 
-                {/* Price comparison table */}
                 <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                   <TrendingDown className="h-4 w-4 text-primary" /> Live Price Comparison
                 </h3>
@@ -202,7 +200,6 @@ const MedicineDetail = () => {
             </Card>
           </div>
 
-          {/* Action sidebar */}
           <div className="space-y-4">
             <Card className="border border-border">
               <CardContent className="p-5">
@@ -241,6 +238,7 @@ const MedicineDetail = () => {
               </CardContent>
             </Card>
 
+            {/* FULLY ALIGNED "FIND LOCALLY" CARD */}
             <Card className="border border-border">
               <CardContent className="p-5">
                 <h4 className="font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
@@ -261,9 +259,58 @@ const MedicineDetail = () => {
                         toast.success(`Searching vendors for ${searchInput}...`);
                       }}>Check</Button>
                     </div>
+
+                    {userProfile?.default_pincode && activePincode === userProfile.default_pincode && (
+                      <p className="text-[10px] text-primary font-medium mt-1">✨ Using saved home location</p>
+                    )}
                   </div>
+                  
+                  {/* The OR divider */}
+                  <div className="relative pt-1 pb-1">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">Or</span></div>
+                  </div>
+
+                  {/* Button Stack matching the Sidebar */}
+                  <div className="space-y-2">
+                    {userProfile?.default_pincode && activePincode !== userProfile.default_pincode && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full h-8 text-xs gap-1 border-primary/20 text-primary hover:bg-primary/5"
+                        onClick={() => {
+                          setSearchInput(userProfile.default_pincode);
+                          setActivePincode(userProfile.default_pincode);
+                          toast.success("Applied saved home location");
+                        }}
+                      >
+                        <Home className="h-3 w-3" />
+                        Use Default ({userProfile.default_pincode})
+                      </Button>
+                    )}
+                    
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-8 text-xs gap-1"
+                      onClick={() => {
+                        if ("geolocation" in navigator) {
+                          navigator.geolocation.getCurrentPosition(
+                            () => {
+                              setSearchInput("Current Location");
+                              setActivePincode("Current Location");
+                              toast.success("Using current location");
+                            },
+                            () => toast.error("Location access denied")
+                          );
+                        }
+                      }}
+                    >
+                      <MapPin className="h-3 w-3" />
+                      Use My Location
+                    </Button>
+                  </div>
+
                   {activePincode && (
-                    <Button variant="ghost" className="w-full h-8 text-xs text-destructive" onClick={() => {
+                    <Button variant="ghost" className="w-full h-8 text-xs text-destructive mt-2" onClick={() => {
                         setSearchInput("");
                         setActivePincode("");
                     }}>
@@ -276,7 +323,6 @@ const MedicineDetail = () => {
           </div>
         </div>
 
-        {/* Tabs section */}
         <Tabs defaultValue="history" className="space-y-4">
           <TabsList className="bg-muted rounded-xl p-1 h-auto flex flex-wrap">
             <TabsTrigger value="history" className="rounded-lg data-[state=active]:bg-background px-4 py-2">Price History</TabsTrigger>
@@ -284,10 +330,8 @@ const MedicineDetail = () => {
             <TabsTrigger value="dosage" className="rounded-lg data-[state=active]:bg-background px-4 py-2">Medical Info</TabsTrigger>
           </TabsList>
 
-          {/* Price History */}
           <TabsContent value="history">
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Line chart */}
               <Card className="border border-border">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">7-Month Price Trend</CardTitle>
@@ -305,7 +349,6 @@ const MedicineDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Bar chart comparison */}
               <Card className="border border-border">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Current Price Comparison</CardTitle>
@@ -325,7 +368,6 @@ const MedicineDetail = () => {
             </div>
           </TabsContent>
 
-          {/* Pharmacy Reviews & Logistics */}
           <TabsContent value="reviews">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {medicine.prices.map((p: any) => (
@@ -365,7 +407,6 @@ const MedicineDetail = () => {
             </div>
           </TabsContent>
 
-          {/* Dosage Info */}
           <TabsContent value="dosage">
             <div className="grid md:grid-cols-2 gap-6">
               <Card className="border border-border">

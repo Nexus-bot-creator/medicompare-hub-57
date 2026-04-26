@@ -5,15 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import MedicineCard from "@/components/MedicineCard";
 import FilterSidebar from "@/components/FilterSidebar";
-// Notice we removed 'medicines' from this import, but kept the types/helpers!
 import { getLowestPrice, pharmacies, type Medicine } from "@/lib/mock-data"; 
+// NEW: Import useApp to get the user's profile!
+import { useApp } from "@/contexts/AppContext"; 
 
-interface Filters {
+// 1. ADDED includeLocal to the interface
+export interface Filters {
   sortBy: "low" | "high";
   inStockOnly: boolean;
   selectedPharmacies: string[];
   priceRange: [number, number];
   location?: string;
+  includeLocal: boolean; 
 }
 
 const defaultFilters: Filters = {
@@ -22,29 +25,42 @@ const defaultFilters: Filters = {
   selectedPharmacies: [...pharmacies],
   priceRange: [0, 200],
   location: "",
+  includeLocal: false, // Default to false
 };
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
+  const { userProfile } = useApp(); // NEW: Pull the user profile
+  
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
-  // --- NEW: React State for Django Data ---
   const [liveMedicines, setLiveMedicines] = useState<Medicine[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- NEW: The Bridge to Django ---
+  // NEW: Smart default setup. If they log in and have a pincode, auto-turn on local!
+  useEffect(() => {
+    if (userProfile?.default_pincode && filters.location === "") {
+      setFilters(prev => ({
+        ...prev,
+        location: userProfile.default_pincode,
+        includeLocal: true
+      }));
+    }
+  }, [userProfile]);
+
   useEffect(() => {
     const fetchMedicines = async () => {
       setIsLoading(true);
       try {
         let url = `http://127.0.0.1:8000/api/medicines/search/?q=${query}`;
         
-        // If user typed a valid 6-digit pincode, send it to Django!
-        const pincode = (filters.location || "").trim();
-        if (/^\d{6}$/.test(pincode)) {
-          url += `&pincode=${pincode}`;
+        // NEW LOGIC: Only send pincode if the toggle is ON
+        if (filters.includeLocal) {
+          const pincode = (filters.location || "").trim();
+          if (/^\d{6}$/.test(pincode)) {
+            url += `&pincode=${pincode}`;
+          }
         }
 
         const response = await fetch(url);
@@ -59,35 +75,22 @@ const SearchResults = () => {
       }
     };
 
-    // Debounce the fetch so it doesn't spam the server on every keystroke
     const timeoutId = setTimeout(() => fetchMedicines(), 300);
     return () => clearTimeout(timeoutId);
-  }, [query, filters.location]); // Re-run when search bar or pincode changes
+  }, [query, filters.location, filters.includeLocal]); // Run when toggle changes!
 
-  // --- UPDATED: Client-side filtering ---
   const filtered = useMemo(() => {
-    // We filter the liveMedicines now, not the mock data!
     let result = liveMedicines.filter((m) => {
-      // Note: We removed the search query and pincode filters from here 
-      // because our Django backend is already handling that perfectly!
-
-      // 1. Price Range Filter
       const lowestPrice = getLowestPrice(m.prices).price;
       if (lowestPrice < filters.priceRange[0] || lowestPrice > filters.priceRange[1]) return false;
-
-      // 2. In Stock Filter
       if (filters.inStockOnly && !m.prices.some((p) => p.inStock)) return false;
-
-      // 3. Pharmacy Filter
       if (filters.selectedPharmacies.length < pharmacies.length) {
         const hasSelectedPharmacy = m.prices.some((p) => filters.selectedPharmacies.includes(p.pharmacy));
         if (!hasSelectedPharmacy) return false;
       }
-
       return true;
     });
 
-    // 4. Sorting Logic
     result.sort((a, b) => {
       const aPrice = getLowestPrice(a.prices).price;
       const bPrice = getLowestPrice(b.prices).price;
@@ -95,7 +98,7 @@ const SearchResults = () => {
     });
 
     return result;
-  }, [liveMedicines, filters]); // Re-run when live data or filters change
+  }, [liveMedicines, filters]);
 
   return (
     <div className="min-h-screen pt-20 pb-12">
@@ -111,30 +114,26 @@ const SearchResults = () => {
             </p>
           </div>
 
-          {/* Mobile filter trigger */}
           <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" className="lg:hidden gap-2 rounded-lg">
-                <SlidersHorizontal className="h-4 w-4" />
-                Filters
+                <SlidersHorizontal className="h-4 w-4" /> Filters
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-6">
-              <SheetHeader>
-                <SheetTitle>Filters</SheetTitle>
-              </SheetHeader>
+              <SheetHeader><SheetTitle>Filters</SheetTitle></SheetHeader>
               <div className="mt-4">
-                <FilterSidebar filters={filters} onChange={setFilters} />
+                {/* Make sure to pass userProfile to the sidebar! */}
+                <FilterSidebar filters={filters} onChange={setFilters} userProfile={userProfile} />
               </div>
             </SheetContent>
           </Sheet>
         </div>
 
         <div className="flex gap-8">
-          {/* Desktop sidebar */}
           <aside className="hidden lg:block w-64 shrink-0">
             <div className="sticky top-20">
-              <FilterSidebar filters={filters} onChange={setFilters} />
+              <FilterSidebar filters={filters} onChange={setFilters} userProfile={userProfile} />
               <Button
                 variant="ghost"
                 className="mt-3 text-xs text-muted-foreground w-full"
@@ -148,11 +147,10 @@ const SearchResults = () => {
           {/* Results grid */}
           <div className="flex-1">
             {isLoading ? (
-               // Loading State
                <div className="flex justify-center items-center py-20">
                  <div className="animate-pulse flex flex-col items-center">
                     <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-muted-foreground">Fetching live data from PharmaPoint...</p>
+                    <p className="text-muted-foreground">Fetching live data...</p>
                  </div>
                </div>
             ) : filtered.length === 0 ? (

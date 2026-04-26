@@ -5,7 +5,7 @@ export interface UserProfile {
   name: string;
   email: string;
   phone: string;
-  pincode: string;
+  default_pincode: string; // <-- FIXED: Renamed to match Django!
   avatarUrl?: string;
 }
 
@@ -85,7 +85,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     else localStorage.removeItem("userProfile");
   }, [userProfile]);
 
-  // 1. UPDATED: Fetch Profile, Wishlist, and Alerts from Django when logged in!
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("access_token");
@@ -103,7 +102,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             name: data.name || "User",
             email: data.email,
             phone: data.phone_number || "",
-            pincode: data.default_pincode || "",
+            default_pincode: data.default_pincode || "", // <-- FIXED: Map directly to default_pincode!
           });
         } else if (profileRes.status === 401) {
           logout();
@@ -138,9 +137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const toggleTheme = useCallback(() => setIsDark((v) => !v), []);
 
-  // 2. UPDATED: Send Wishlist toggles to Django
   const toggleWishlist = useCallback(async (id: string) => {
-    // Optimistically update the UI instantly
     setWishlist((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
     const token = localStorage.getItem("access_token");
@@ -162,9 +159,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isInWishlist = useCallback((id: string) => wishlist.includes(id), [wishlist]);
 
-  // 3. UPDATED: Send New Price Alerts to Django
   const addPriceAlert = useCallback(async (alert: PriceAlert) => {
-    // Optimistically update the UI
     setPriceAlerts((prev) => [...prev.filter((a) => a.medicineId !== alert.medicineId), alert]);
 
     const token = localStorage.getItem("access_token");
@@ -183,7 +178,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
         const data = await res.json();
         
-        // Update the fake React ID with the real Database ID so we can delete it later
         if (res.ok) {
           setPriceAlerts((prev) => prev.map((a) => a.medicineId === alert.medicineId ? { ...a, id: data.id } : a));
         }
@@ -193,12 +187,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // 4. UPDATED: Send Delete Alert commands to Django
   const removePriceAlert = useCallback(async (id: string) => {
     setPriceAlerts((prev) => prev.filter((a) => a.id !== id));
     
     const token = localStorage.getItem("access_token");
-    if (token && !id.startsWith("alert-")) { // Don't delete fake IDs
+    if (token && !id.startsWith("alert-")) {
       try {
         await fetch(`http://127.0.0.1:8000/api/user/alerts/${id}/`, {
           method: "DELETE",
@@ -212,16 +205,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateUserProfile = useCallback((patch: Partial<UserProfile>) => {
     setUserProfile((prev) =>
-      prev ? { ...prev, ...patch } : { name: "", email: "", phone: "", pincode: "", ...patch }
+      prev ? { ...prev, ...patch } : { name: "", email: "", phone: "", default_pincode: "", ...patch } // <-- FIXED fallback!
     );
   }, []);
 
-  // 5. UPDATED: Clear private data on logout
   const logout = useCallback(() => {
     setIsLoggedIn(false);
     setUserProfile(null);
-    setWishlist([]);    // Clear wishlist
-    setPriceAlerts([]); // Clear alerts
+    setWishlist([]);    
+    setPriceAlerts([]); 
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("userProfile");

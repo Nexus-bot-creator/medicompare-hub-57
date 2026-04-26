@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react"; // <-- NEW: Added for the loading spinner!
+import { Loader2 } from "lucide-react"; 
 
 const EditProfileModal = () => {
   const { editProfileOpen, setEditProfileOpen, userProfile, updateUserProfile } = useApp();
@@ -15,7 +15,6 @@ const EditProfileModal = () => {
   const [pincode, setPincode] = useState("");
   const [errors, setErrors] = useState<{ pincode?: string; phone?: string }>({});
   
-  // NEW: Add a loading state for the button
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -23,12 +22,12 @@ const EditProfileModal = () => {
       setName(userProfile.name ?? "");
       setEmail(userProfile.email ?? "");
       setPhone(userProfile.phone ?? "");
-      setPincode(userProfile.pincode ?? "");
+      // 🛠️ FIXED: Reading from default_pincode
+      setPincode(userProfile.default_pincode ?? ""); 
       setErrors({});
     }
   }, [editProfileOpen, userProfile]);
 
-  // UPDATED: Made this an async function to talk to Django
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -49,12 +48,12 @@ const EditProfileModal = () => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // The VIP pass!
+          "Authorization": `Bearer ${token}` 
         },
         body: JSON.stringify({
           name: name.trim(),
-          phone_number: phone,      // Mapping to Django's snake_case variable
-          default_pincode: pincode  // Mapping to Django's snake_case variable
+          phone_number: phone,      
+          default_pincode: pincode  
         })
       });
 
@@ -62,8 +61,8 @@ const EditProfileModal = () => {
         throw new Error("Failed to save profile to the server.");
       }
 
-      // 3. If Django succeeds, update the React UI and close the modal!
-      updateUserProfile({ name: name.trim(), email: email.trim(), phone, pincode });
+      // 3. 🛠️ FIXED: Writing to default_pincode so the AppContext stays synced!
+      updateUserProfile({ name: name.trim(), email: email.trim(), phone, default_pincode: pincode });
       toast.success("Profile updated successfully!");
       setEditProfileOpen(false);
 
@@ -77,7 +76,7 @@ const EditProfileModal = () => {
   return (
     <Dialog
       open={editProfileOpen}
-      onOpenChange={(open) => !isLoading && setEditProfileOpen(open)} // Prevent closing while loading
+      onOpenChange={(open) => !isLoading && setEditProfileOpen(open)} 
     >
       <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
+import { MapPin, Home } from "lucide-react"; // NEW: Imported Home icon
 import { pharmacies } from "@/lib/mock-data";
 
 interface Filters {
@@ -14,60 +14,100 @@ interface Filters {
   selectedPharmacies: string[];
   priceRange: [number, number];
   location?: string;
+  includeLocal: boolean;
 }
 
 interface Props {
   filters: Filters;
   onChange: (filters: Filters) => void;
+  userProfile?: any;
 }
 
-const FilterSidebar = ({ filters, onChange }: Props) => {
+const FilterSidebar = ({ filters, onChange, userProfile }: Props) => {
   const update = (partial: Partial<Filters>) => onChange({ ...filters, ...partial });
+  console.log("MY PROFILE DATA IS:", userProfile)
 
   return (
     <div className="space-y-1">
       <h2 className="font-semibold text-foreground text-sm px-1 mb-3">Filters</h2>
 
       <Accordion type="multiple" defaultValue={["location", "sort", "stock", "pharmacy", "price"]} className="space-y-1">
+        
+        {/* LOCAL VENDORS SECTION */}
         <AccordionItem value="location" className="border rounded-lg px-3">
           <AccordionTrigger className="text-sm font-medium py-3 hover:no-underline">Local Vendors</AccordionTrigger>
           <AccordionContent className="pb-3 space-y-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Find by Pincode</Label>
-              <Input 
-                placeholder="Enter pincode (e.g. 110001)" 
-                value={filters.location || ""}
-                onChange={(e) => update({ location: e.target.value })}
-                className="h-8 text-sm"
+            
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <Label htmlFor="local-toggle" className="text-xs text-muted-foreground cursor-pointer">
+                Include Local Shops
+              </Label>
+              <Switch 
+                id="local-toggle"
+                checked={filters.includeLocal}
+                onCheckedChange={(v) => update({ includeLocal: v })}
               />
             </div>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
+
+            {filters.includeLocal && (
+              <div className="space-y-3 pt-2">
+                <div className="space-y-2">
+                  <Input 
+                    placeholder="Enter pincode (e.g. 110001)" 
+                    value={filters.location || ""}
+                    onChange={(e) => update({ location: e.target.value })}
+                    className="h-8 text-sm"
+                  />
+                  {userProfile?.default_pincode && filters.location === userProfile.default_pincode && (
+                    <p className="text-[10px] text-primary font-medium mt-1">✨ Using saved home location</p>
+                  )}
+                </div>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+                
+                {/* BUTTON STACK */}
+                <div className="space-y-2">
+                  {/* Show Home button only if they have a saved pincode AND aren't currently using it */}
+                  {userProfile?.default_pincode && filters.location !== userProfile.default_pincode && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-8 text-xs gap-1 border-primary/20 text-primary hover:bg-primary/5"
+                      onClick={() => update({ location: userProfile.default_pincode })}
+                    >
+                      <Home className="h-3 w-3" />
+                      Use Default ({userProfile.default_pincode})
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-8 text-xs gap-1"
+                    onClick={() => {
+                      if ("geolocation" in navigator) {
+                        navigator.geolocation.getCurrentPosition(
+                          () => update({ location: "Current Location" }),
+                          () => update({ location: "" })
+                        );
+                      }
+                    }}
+                  >
+                    <MapPin className="h-3 w-3" />
+                    Use My Location
+                  </Button>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or</span>
-              </div>
-            </div>
-            <Button 
-              variant="outline" 
-              className="w-full h-8 text-xs gap-1"
-              onClick={() => {
-                if ("geolocation" in navigator) {
-                  navigator.geolocation.getCurrentPosition(
-                    // In a real app we'd reverse geocode here, for now mock:
-                    () => update({ location: "Current Location" }),
-                    () => update({ location: "" })
-                  );
-                }
-              }}
-            >
-              <MapPin className="h-3 w-3" />
-              Use My Location
-            </Button>
+            )}
           </AccordionContent>
         </AccordionItem>
 
+        {/* SORT BY */}
         <AccordionItem value="sort" className="border rounded-lg px-3">
           <AccordionTrigger className="text-sm font-medium py-3 hover:no-underline">Sort By</AccordionTrigger>
           <AccordionContent className="pb-3 space-y-2">
@@ -89,6 +129,7 @@ const FilterSidebar = ({ filters, onChange }: Props) => {
           </AccordionContent>
         </AccordionItem>
 
+        {/* AVAILABILITY */}
         <AccordionItem value="stock" className="border rounded-lg px-3">
           <AccordionTrigger className="text-sm font-medium py-3 hover:no-underline">Availability</AccordionTrigger>
           <AccordionContent className="pb-3">
@@ -98,11 +139,12 @@ const FilterSidebar = ({ filters, onChange }: Props) => {
                 onCheckedChange={(v) => update({ inStockOnly: v })}
                 id="in-stock"
               />
-              <Label htmlFor="in-stock" className="text-sm">In Stock Only</Label>
+              <Label htmlFor="in-stock" className="text-sm cursor-pointer">In Stock Only</Label>
             </div>
           </AccordionContent>
         </AccordionItem>
 
+        {/* PHARMACIES */}
         <AccordionItem value="pharmacy" className="border rounded-lg px-3">
           <AccordionTrigger className="text-sm font-medium py-3 hover:no-underline">Pharmacies</AccordionTrigger>
           <AccordionContent className="pb-3 space-y-2">
@@ -123,6 +165,7 @@ const FilterSidebar = ({ filters, onChange }: Props) => {
           </AccordionContent>
         </AccordionItem>
 
+        {/* PRICE RANGE */}
         <AccordionItem value="price" className="border rounded-lg px-3">
           <AccordionTrigger className="text-sm font-medium py-3 hover:no-underline">Price Range</AccordionTrigger>
           <AccordionContent className="pb-3 space-y-3">
@@ -139,6 +182,7 @@ const FilterSidebar = ({ filters, onChange }: Props) => {
             </div>
           </AccordionContent>
         </AccordionItem>
+
       </Accordion>
     </div>
   );
