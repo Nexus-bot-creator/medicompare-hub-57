@@ -304,6 +304,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         userProfile, setUserProfile, updateUserProfile, isProfileLoading,
         logout,
         editProfileOpen, setEditProfileOpen,
+        cart, cartPincode, addToCart, forceReplaceCart, updateCartQuantity, removeFromCart, clearCart,
       }}
     >
       {children}
