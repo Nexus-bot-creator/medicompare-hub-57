@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Bell, Trash2, ArrowDown, Loader2, Search } from "lucide-react";
+import { Heart, Bell, Trash2, ArrowDown, Loader2, Search, ShoppingCart } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom"; 
 
 const Dashboard = () => {
-  const { wishlist, toggleWishlist, priceAlerts, removePriceAlert, isLoggedIn, setAuthModal } = useApp();
+  const { wishlist, toggleWishlist, priceAlerts, removePriceAlert, isLoggedIn, setAuthModal, cart } = useApp();
   const navigate = useNavigate(); 
   
   const [wishlistMedicines, setWishlistMedicines] = useState<any[]>([]);
