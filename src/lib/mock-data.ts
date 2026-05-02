@@ -78,11 +78,21 @@ export const medicines: Medicine[] = [
       { pharmacy: "PharmEasy", price: 25, inStock: true, url: "#", pincode: "110001", area: "Connaught Place", city: "New Delhi", distanceKm: 1.2 },
       { pharmacy: "Netmeds", price: 22, inStock: true, url: "#", pincode: "110016", area: "Hauz Khas", city: "New Delhi", distanceKm: 3.5 },
       { pharmacy: "1mg", price: 28, inStock: true, url: "#", pincode: "400050", area: "Bandra West", city: "Mumbai", distanceKm: 0.8 },
+      { pharmacy: "Sharma Medicos", price: 20, inStock: true, url: "#", pincode: "110001", area: "Connaught Place", city: "New Delhi", distanceKm: 0.4 },
+      { pharmacy: "Wellness Chemist", price: 24, inStock: true, url: "#", pincode: "560034", area: "Koramangala", city: "Bengaluru", distanceKm: 0.6 },
     ],
   },
   {
     id: "2", name: "Amoxicillin", dosage: "250mg", form: "Capsule", manufacturer: "Sun Pharma",
     category: "Antibiotics",
+    prices: [
+      { pharmacy: "PharmEasy", price: 85, inStock: true, url: "#", pincode: "560034", area: "Koramangala", city: "Bengaluru", distanceKm: 2.1 },
+      { pharmacy: "Apollo Pharmacy", price: 78, inStock: true, url: "#", pincode: "560001", area: "MG Road", city: "Bengaluru", distanceKm: 1.5 },
+      { pharmacy: "MedPlus", price: 92, inStock: false, url: "#", pincode: "600001", area: "Parrys", city: "Chennai", distanceKm: 4.0 },
+      { pharmacy: "City Care Pharmacy", price: 80, inStock: true, url: "#", pincode: "560034", area: "Koramangala", city: "Bengaluru", distanceKm: 0.7 },
+      { pharmacy: "Sharma Medicos", price: 82, inStock: true, url: "#", pincode: "110001", area: "Connaught Place", city: "New Delhi", distanceKm: 0.5 },
+    ],
+  },
     prices: [
       { pharmacy: "PharmEasy", price: 85, inStock: true, url: "#", pincode: "560034", area: "Koramangala", city: "Bengaluru", distanceKm: 2.1 },
       { pharmacy: "Apollo Pharmacy", price: 78, inStock: true, url: "#", pincode: "560001", area: "MG Road", city: "Bengaluru", distanceKm: 1.5 },
