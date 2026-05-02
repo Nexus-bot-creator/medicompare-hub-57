@@ -72,12 +72,21 @@ const Dashboard = () => {
         {/* 🛠️ UPDATED: Added a persistent header with a Search button! */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <h1 className="text-2xl font-bold text-foreground">My Dashboard</h1>
-          <Button 
-            onClick={() => navigate('/search')} 
-            className="gap-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto shadow-sm"
-          >
-            <Search className="h-4 w-4" /> Find More Medicines
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() => navigate('/cart')}
+              variant="outline"
+              className="gap-2 rounded-lg w-full sm:w-auto"
+            >
+              <ShoppingCart className="h-4 w-4" /> View Cart{cart.length > 0 ? ` (${cart.length})` : ""}
+            </Button>
+            <Button
+              onClick={() => navigate('/search')}
+              className="gap-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto shadow-sm"
+            >
+              <Search className="h-4 w-4" /> Find More Medicines
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="wishlist">
