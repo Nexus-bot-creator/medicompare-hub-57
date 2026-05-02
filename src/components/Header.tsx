@@ -99,6 +99,17 @@ const Header = () => {
             </Button>
           </Link>
 
+          <Link to="/cart">
+            <Button variant="ghost" size="icon" className="rounded-full relative" aria-label="Cart">
+              <ShoppingCart className="h-4 w-4" />
+              {cartCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
+                  {cartCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
+
           {isLoggedIn ? (
             <ProfileMenu />
           ) : (
