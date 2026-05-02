@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sun, Moon, Heart, Search, Menu, X } from "lucide-react";
+import { Sun, Moon, Heart, Search, Menu, X, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApp } from "@/contexts/AppContext";
@@ -9,7 +9,8 @@ import SearchSuggestions from "@/components/SearchSuggestions";
 import ProfileMenu from "@/components/ProfileMenu";
 
 const Header = () => {
-  const { isDark, toggleTheme, wishlist, setAuthModal, isLoggedIn } = useApp();
+  const { isDark, toggleTheme, wishlist, setAuthModal, isLoggedIn, cart } = useApp();
+  const cartCount = cart.reduce((s, c) => s + c.quantity, 0);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
