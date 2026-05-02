@@ -92,7 +92,7 @@ const MedicineCard = ({ medicine, index = 0, sortBy = "low" }: Props) => {
       area: p.area,
       price: p.price,
     });
-    if (result.ok) {
+    if (result.ok === true) {
       toast.success("Added to cart", { description: `${medicine.name} from ${p.pharmacy}` });
     } else {
       setPendingPrice(p);
