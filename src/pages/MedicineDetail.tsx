@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Heart, Bell, ExternalLink, Star, TrendingDown, Package, Info, MapPin, Loader2, Home } from "lucide-react";
+// 🛠️ ADDED: ShoppingCart icon
+import { ArrowLeft, Heart, Bell, ExternalLink, Star, TrendingDown, Package, Info, MapPin, Loader2, Home, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,40 +13,41 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
-// 🛠️ NEW: Imported Switch and Label for the new UI!
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
+// 🛠️ NEW: List of known online giants. Anything else is treated as Local!
+const ONLINE_PHARMACIES = ["PharmEasy", "1mg", "Tata 1mg", "Netmeds", "Apollo Pharmacy"];
 
 const MedicineDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { toggleWishlist, isInWishlist, addPriceAlert, userProfile } = useApp();
 
-  // --- Dynamic State ---
   const [medicine, setMedicine] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   
-  // 🛠️ UPDATED: State for the seamless toggle feature
   const [includeLocal, setIncludeLocal] = useState(false);
   const [searchInput, setSearchInput] = useState(""); 
   const [activePincode, setActivePincode] = useState("");
 
-  // --- Auto-fill Smart Profile Pincode ---
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [customPrice, setCustomPrice] = useState(0);
+
   useEffect(() => {
     if (userProfile?.default_pincode && !searchInput) {
       setSearchInput(userProfile.default_pincode);
-      setIncludeLocal(true); // Auto-turn on the switch if they have a saved pincode!
+      setIncludeLocal(true); 
     }
   }, [userProfile]);
 
-  // 🛠️ NEW: Debounce effect so prices update instantly as they type (No "Check" button needed!)
   useEffect(() => {
     if (!includeLocal) {
-      setActivePincode(""); // Instantly clear filter when switched off
+      setActivePincode(""); 
       return;
     }
     
-    // Wait 500ms after they stop typing before fetching
     const timeoutId = setTimeout(() => {
       setActivePincode(searchInput);
     }, 500);
@@ -53,7 +55,6 @@ const MedicineDetail = () => {
     return () => clearTimeout(timeoutId);
   }, [searchInput, includeLocal]);
 
-  // --- Fetch Data from Django ---
   useEffect(() => {
     const fetchMedicine = async () => {
       setLoading(true);
@@ -98,7 +99,6 @@ const MedicineDetail = () => {
     );
   }
 
-  // --- Calculations ---
   const inWishlist = isInWishlist(medicine.id.toString());
   const validPrices = medicine.prices.filter((p: any) => p.inStock);
   const lowestPriceObj = validPrices.length > 0 
@@ -107,6 +107,8 @@ const MedicineDetail = () => {
   
   const lowestPrice = lowestPriceObj?.price || 0;
   const lowestPharmacy = lowestPriceObj?.pharmacy || "Unknown";
+  // 🛠️ NEW: Check if the lowest pharmacy is online or local
+  const isLowestOnline = ONLINE_PHARMACIES.includes(lowestPharmacy);
 
   const highestPrice = Math.max(...medicine.prices.map((p: any) => p.price));
   const savings = highestPrice > lowestPrice ? Math.round(((highestPrice - lowestPrice) / highestPrice) * 100) : 0;
@@ -129,18 +131,29 @@ const MedicineDetail = () => {
     toast.success(inWishlist ? "Removed from Wishlist" : "Added to Wishlist!");
   };
 
-  const handleAlert = () => {
+  const handleAlertSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     addPriceAlert({
       id: `alert-${medicine.id}`,
       medicineId: medicine.id.toString(),
-      targetPrice: Math.round(lowestPrice * 0.9),
+      targetPrice: customPrice, 
       currentPrice: lowestPrice,
       medicineName: medicine.name,
       dosage: medicine.dosage,
       status: "active",
     });
+    
+    setIsAlertOpen(false); 
     toast.success("Price Alert Set!", {
-      description: `We'll notify you when ${medicine.name} drops below ₹${Math.round(lowestPrice * 0.9)}`,
+      description: `We'll notify you when ${medicine.name} drops below ₹${customPrice}`,
+    });
+  };
+
+  // 🛠️ NEW: Placeholder cart logic
+  const handleAddToCart = (pharmacyName: string, price: number) => {
+    // We will wire this up to AppContext in the next step!
+    toast.success(`Added ${medicine.name} to Cart`, {
+      description: `From local vendor: ${pharmacyName}`,
     });
   };
 
@@ -192,21 +205,39 @@ const MedicineDetail = () => {
                   <div className="space-y-2">
                     {medicine.prices.map((p: any) => {
                       const isLowest = p.price === lowestPrice && p.inStock;
+                      // 🛠️ NEW: Determine if this specific row is online or local
+                      const isOnline = ONLINE_PHARMACIES.includes(p.pharmacy);
+
                       return (
                         <div key={p.pharmacy} className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${isLowest ? "bg-accent border border-primary/20" : "bg-muted/50"}`}>
                           <div className="flex items-center gap-3">
                             <div className={`w-2 h-2 rounded-full ${p.inStock ? "bg-green-500" : "bg-destructive"}`} />
                             <div>
-                              <span className={`font-medium ${!p.inStock ? "text-muted-foreground line-through" : "text-foreground"}`}>{p.pharmacy}</span>
-                              {isLowest && <Badge className="ml-2 bg-primary text-primary-foreground text-[10px] px-1.5 py-0">BEST</Badge>}
+                              <div className="flex items-center gap-2">
+                                <span className={`font-medium ${!p.inStock ? "text-muted-foreground line-through" : "text-foreground"}`}>{p.pharmacy}</span>
+                                {!isOnline && <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">LOCAL</Badge>}
+                              </div>
+                              {isLowest && <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 mt-1">BEST</Badge>}
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             {!p.inStock && <span className="text-xs text-destructive">Out of stock</span>}
                             <span className={`text-lg font-bold ${isLowest ? "text-primary" : "text-foreground"}`}>₹{p.price}</span>
-                            {p.inStock && (
+                            
+                            {/* 🛠️ NEW: Render different buttons based on Online vs Local */}
+                            {p.inStock && isOnline && (
                               <Button size="sm" variant={isLowest ? "default" : "outline"} className="rounded-lg gap-1 h-8 text-xs">
-                                <ExternalLink className="h-3 w-3" /> Buy
+                                <ExternalLink className="h-3 w-3" /> Buy Now
+                              </Button>
+                            )}
+                            {p.inStock && !isOnline && (
+                              <Button 
+                                size="sm" 
+                                variant={isLowest ? "default" : "outline"} 
+                                className="rounded-lg gap-1 h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                                onClick={() => handleAddToCart(p.pharmacy, p.price)}
+                              >
+                                <ShoppingCart className="h-3 w-3" /> Add to Cart
                               </Button>
                             )}
                           </div>
@@ -225,17 +256,36 @@ const MedicineDetail = () => {
                 <div className="text-center mb-4">
                   <p className="text-sm text-muted-foreground">Lowest Price</p>
                   <p className="text-4xl font-extrabold text-primary">₹{lowestPrice}</p>
-                  <p className="text-sm text-muted-foreground">at {lowestPharmacy}</p>
+                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
+                    at {lowestPharmacy}
+                    {!isLowestOnline && <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">LOCAL</Badge>}
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Button className="w-full rounded-xl gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-                    <ExternalLink className="h-4 w-4" /> View Best Deal
-                  </Button>
+                  
+                  {/* 🛠️ NEW: Main Action Button updates based on lowest pharmacy type */}
+                  {isLowestOnline ? (
+                    <Button className="w-full rounded-xl gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                      <ExternalLink className="h-4 w-4" /> Buy Now from {lowestPharmacy}
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full rounded-xl gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+                      onClick={() => handleAddToCart(lowestPharmacy, lowestPrice)}
+                    >
+                      <ShoppingCart className="h-4 w-4" /> Add Local Stock to Cart
+                    </Button>
+                  )}
+
                   <Button variant="outline" className={`w-full rounded-xl gap-2 ${inWishlist ? "text-destructive border-destructive/30 bg-destructive/5" : ""}`} onClick={handleWishlist}>
                     <Heart className={`h-4 w-4 ${inWishlist ? "fill-current" : ""}`} />
                     {inWishlist ? "In Wishlist" : "Add to Wishlist"}
                   </Button>
-                  <Button variant="outline" className="w-full rounded-xl gap-2" onClick={handleAlert}>
+                  
+                  <Button variant="outline" className="w-full rounded-xl gap-2" onClick={() => {
+                      setCustomPrice(Math.round(lowestPrice * 0.9)); 
+                      setIsAlertOpen(true);
+                  }}>
                     <Bell className="h-4 w-4" /> Set Price Alert
                   </Button>
                 </div>
@@ -257,7 +307,6 @@ const MedicineDetail = () => {
               </CardContent>
             </Card>
 
-            {/* 🛠️ THE UPGRADED "LOCAL VENDORS" CARD */}
             <Card className="border border-border">
               <CardContent className="p-5">
                 <h4 className="font-semibold text-foreground text-sm mb-4">Local Vendors</h4>
@@ -271,7 +320,6 @@ const MedicineDetail = () => {
                   />
                 </div>
 
-                {/* Only show the inputs if the switch is ON */}
                 {includeLocal && (
                   <div className="space-y-3 animate-fade-in">
                     <div className="space-y-2">
@@ -457,6 +505,47 @@ const MedicineDetail = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <DialogContent className="sm:max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Set Price Alert</DialogTitle>
+            <DialogDescription>
+              Get notified when the price of {medicine.name} drops.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleAlertSubmit} className="space-y-4 mt-2">
+            <div className="flex justify-between items-center bg-muted/50 p-3 rounded-lg text-sm">
+              <span className="text-muted-foreground">Current Lowest Price:</span>
+              <span className="font-semibold text-foreground">₹{lowestPrice}</span>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor={`target-${medicine.id}`}>Your Target Price (₹)</Label>
+              <Input
+                id={`target-${medicine.id}`}
+                type="number"
+                min="1"
+                max={lowestPrice > 1 ? lowestPrice - 1 : 1} 
+                value={customPrice}
+                onChange={(e) => setCustomPrice(Number(e.target.value))}
+                required
+                className="rounded-lg text-lg"
+              />
+            </div>
+            
+            <DialogFooter className="mt-6 gap-2 sm:gap-0">
+              <Button type="button" variant="ghost" className="rounded-lg" onClick={() => setIsAlertOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">
+                Set Alert
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
