@@ -35,7 +35,18 @@ export interface PriceAlert {
   status: "active" | "triggered" | "expired";
 }
 
-export const pharmacies = ["PharmEasy", "Netmeds", "1mg", "Apollo Pharmacy", "MedPlus"];
+export const pharmacies = [
+  "PharmEasy", "Netmeds", "1mg", "Apollo Pharmacy", "MedPlus",
+  // Local independent pharmacies (Add to Cart flow)
+  "Sharma Medicos", "Wellness Chemist", "City Care Pharmacy", "Green Cross Pharma",
+];
+
+/** Online (national) pharmacies — checkout redirects to their site (Buy Now). */
+export const ONLINE_PHARMACIES = new Set([
+  "PharmEasy", "Netmeds", "1mg", "Apollo Pharmacy", "MedPlus",
+]);
+
+export const isOnlinePharmacy = (name: string) => ONLINE_PHARMACIES.has(name);
 
 /** Supported pincodes mapped to area + city for the location filter */
 export interface PincodeInfo {
