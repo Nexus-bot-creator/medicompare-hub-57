@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Bell, Trash2, ArrowDown, Loader2, Search } from "lucide-react";
+import { Heart, Bell, Trash2, ArrowDown, Loader2, Search, ShoppingCart } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom"; 
 
 const Dashboard = () => {
-  const { wishlist, toggleWishlist, priceAlerts, removePriceAlert, isLoggedIn, setAuthModal } = useApp();
+  const { wishlist, toggleWishlist, priceAlerts, removePriceAlert, isLoggedIn, setAuthModal, cart } = useApp();
   const navigate = useNavigate(); 
   
   const [wishlistMedicines, setWishlistMedicines] = useState<any[]>([]);
@@ -72,12 +72,21 @@ const Dashboard = () => {
         {/* 🛠️ UPDATED: Added a persistent header with a Search button! */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <h1 className="text-2xl font-bold text-foreground">My Dashboard</h1>
-          <Button 
-            onClick={() => navigate('/search')} 
-            className="gap-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto shadow-sm"
-          >
-            <Search className="h-4 w-4" /> Find More Medicines
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() => navigate('/cart')}
+              variant="outline"
+              className="gap-2 rounded-lg w-full sm:w-auto"
+            >
+              <ShoppingCart className="h-4 w-4" /> View Cart{cart.length > 0 ? ` (${cart.length})` : ""}
+            </Button>
+            <Button
+              onClick={() => navigate('/search')}
+              className="gap-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto shadow-sm"
+            >
+              <Search className="h-4 w-4" /> Find More Medicines
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="wishlist">

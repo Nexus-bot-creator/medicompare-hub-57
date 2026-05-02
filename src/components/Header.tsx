@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sun, Moon, Heart, Search, Menu, X } from "lucide-react";
+import { Sun, Moon, Heart, Search, Menu, X, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useApp } from "@/contexts/AppContext";
@@ -9,7 +9,8 @@ import SearchSuggestions from "@/components/SearchSuggestions";
 import ProfileMenu from "@/components/ProfileMenu";
 
 const Header = () => {
-  const { isDark, toggleTheme, wishlist, setAuthModal, isLoggedIn } = useApp();
+  const { isDark, toggleTheme, wishlist, setAuthModal, isLoggedIn, cart } = useApp();
+  const cartCount = cart.reduce((s, c) => s + c.quantity, 0);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
@@ -93,6 +94,17 @@ const Header = () => {
               {wishlist.length > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
                   {wishlist.length}
+                </Badge>
+              )}
+            </Button>
+          </Link>
+
+          <Link to="/cart">
+            <Button variant="ghost" size="icon" className="rounded-full relative" aria-label="Cart">
+              <ShoppingCart className="h-4 w-4" />
+              {cartCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
+                  {cartCount}
                 </Badge>
               )}
             </Button>
