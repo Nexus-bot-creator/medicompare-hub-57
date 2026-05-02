@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { PriceAlert } from "@/lib/mock-data";
 
+export interface CartItem {
+  medicineId: string;
+  medicineName: string;
+  dosage: string;
+  pharmacy: string;
+  pincode: string;
+  area: string;
+  price: number;
+  quantity: number;
+}
+
 export interface UserProfile {
   name: string;
   email: string;
