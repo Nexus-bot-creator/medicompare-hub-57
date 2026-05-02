@@ -12,6 +12,9 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, BarChart, Bar } from "recharts";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
+// 🛠️ NEW: Imported Switch and Label for the new UI!
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const MedicineDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,17 +25,33 @@ const MedicineDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   
-  // State for the "Find Locally" feature
+  // 🛠️ UPDATED: State for the seamless toggle feature
+  const [includeLocal, setIncludeLocal] = useState(false);
   const [searchInput, setSearchInput] = useState(""); 
   const [activePincode, setActivePincode] = useState("");
 
   // --- Auto-fill Smart Profile Pincode ---
   useEffect(() => {
-    if (userProfile?.default_pincode && !activePincode) {
+    if (userProfile?.default_pincode && !searchInput) {
       setSearchInput(userProfile.default_pincode);
-      setActivePincode(userProfile.default_pincode);
+      setIncludeLocal(true); // Auto-turn on the switch if they have a saved pincode!
     }
-  }, [userProfile, activePincode]);
+  }, [userProfile]);
+
+  // 🛠️ NEW: Debounce effect so prices update instantly as they type (No "Check" button needed!)
+  useEffect(() => {
+    if (!includeLocal) {
+      setActivePincode(""); // Instantly clear filter when switched off
+      return;
+    }
+    
+    // Wait 500ms after they stop typing before fetching
+    const timeoutId = setTimeout(() => {
+      setActivePincode(searchInput);
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchInput, includeLocal]);
 
   // --- Fetch Data from Django ---
   useEffect(() => {
@@ -41,8 +60,8 @@ const MedicineDetail = () => {
       setError(false);
       try {
         let url = `http://127.0.0.1:8000/api/medicines/${id}/`;
-        if (activePincode) {
-          url += `?pincode=${activePincode}`;
+        if (activePincode && /^\d{6}$/.test(activePincode.trim())) {
+          url += `?pincode=${activePincode.trim()}`;
         }
 
         const res = await fetch(url);
@@ -238,56 +257,40 @@ const MedicineDetail = () => {
               </CardContent>
             </Card>
 
-            {/* FULLY ALIGNED "FIND LOCALLY" CARD */}
+            {/* 🛠️ THE UPGRADED "LOCAL VENDORS" CARD */}
             <Card className="border border-border">
               <CardContent className="p-5">
-                <h4 className="font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-primary" /> Find Locally
-                </h4>
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">Check local vendor availability by pincode:</p>
-                    <div className="flex gap-2">
+                <h4 className="font-semibold text-foreground text-sm mb-4">Local Vendors</h4>
+                
+                <div className="flex items-center justify-between mb-4">
+                  <Label htmlFor="local-mode" className="text-sm font-medium text-muted-foreground cursor-pointer">Include Local Shops</Label>
+                  <Switch 
+                    id="local-mode" 
+                    checked={includeLocal} 
+                    onCheckedChange={setIncludeLocal} 
+                  />
+                </div>
+
+                {/* Only show the inputs if the switch is ON */}
+                {includeLocal && (
+                  <div className="space-y-3 animate-fade-in">
+                    <div className="space-y-2">
                       <Input 
                         placeholder="e.g. 110001" 
                         className="h-9 text-sm" 
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                       />
-                      <Button variant="secondary" className="h-9 px-3 shrink-0" onClick={() => {
-                        setActivePincode(searchInput);
-                        toast.success(`Searching vendors for ${searchInput}...`);
-                      }}>Check</Button>
+                      {userProfile?.default_pincode && searchInput === userProfile.default_pincode && (
+                        <p className="text-[10px] text-primary font-medium mt-1">✨ Using saved home location</p>
+                      )}
+                    </div>
+                    
+                    <div className="relative pt-1 pb-1">
+                      <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                      <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">Or</span></div>
                     </div>
 
-                    {userProfile?.default_pincode && activePincode === userProfile.default_pincode && (
-                      <p className="text-[10px] text-primary font-medium mt-1">✨ Using saved home location</p>
-                    )}
-                  </div>
-                  
-                  {/* The OR divider */}
-                  <div className="relative pt-1 pb-1">
-                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">Or</span></div>
-                  </div>
-
-                  {/* Button Stack matching the Sidebar */}
-                  <div className="space-y-2">
-                    {userProfile?.default_pincode && activePincode !== userProfile.default_pincode && (
-                      <Button 
-                        variant="outline" 
-                        className="w-full h-8 text-xs gap-1 border-primary/20 text-primary hover:bg-primary/5"
-                        onClick={() => {
-                          setSearchInput(userProfile.default_pincode);
-                          setActivePincode(userProfile.default_pincode);
-                          toast.success("Applied saved home location");
-                        }}
-                      >
-                        <Home className="h-3 w-3" />
-                        Use Default ({userProfile.default_pincode})
-                      </Button>
-                    )}
-                    
                     <Button 
                       variant="outline" 
                       className="w-full h-8 text-xs gap-1"
@@ -296,7 +299,6 @@ const MedicineDetail = () => {
                           navigator.geolocation.getCurrentPosition(
                             () => {
                               setSearchInput("Current Location");
-                              setActivePincode("Current Location");
                               toast.success("Using current location");
                             },
                             () => toast.error("Location access denied")
@@ -308,16 +310,7 @@ const MedicineDetail = () => {
                       Use My Location
                     </Button>
                   </div>
-
-                  {activePincode && (
-                    <Button variant="ghost" className="w-full h-8 text-xs text-destructive mt-2" onClick={() => {
-                        setSearchInput("");
-                        setActivePincode("");
-                    }}>
-                        Clear Filter
-                    </Button>
-                  )}
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>

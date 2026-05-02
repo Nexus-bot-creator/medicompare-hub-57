@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
-import { Heart, Bell, Trash2, ArrowDown, Loader2 } from "lucide-react";
+import { Heart, Bell, Trash2, ArrowDown, Loader2, Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom"; 
 
 const Dashboard = () => {
   const { wishlist, toggleWishlist, priceAlerts, removePriceAlert, isLoggedIn, setAuthModal } = useApp();
+  const navigate = useNavigate(); 
   
-  // NEW: State to hold the actual fetched medicines from Django
   const [wishlistMedicines, setWishlistMedicines] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // NEW: Fetch medicine details whenever the wishlist IDs change!
   useEffect(() => {
     const fetchWishlistData = async () => {
       if (wishlist.length === 0) {
@@ -24,13 +24,11 @@ const Dashboard = () => {
 
       setIsLoading(true);
       try {
-        // Fetch all wishlist medicines in parallel
         const promises = wishlist.map(id => 
           fetch(`http://127.0.0.1:8000/api/medicines/${id}/`).then(res => res.ok ? res.json() : null)
         );
         const results = await Promise.all(promises);
         
-        // Filter out any nulls (in case a medicine was deleted from the database)
         setWishlistMedicines(results.filter(m => m !== null));
       } catch (error) {
         console.error("Failed to fetch wishlist medicines", error);
@@ -44,7 +42,6 @@ const Dashboard = () => {
     }
   }, [wishlist, isLoggedIn]);
 
-  // NEW: Local helper to calculate lowest price from real Django data
   const getLowestPrice = (prices: any[]) => {
     const valid = prices?.filter((p) => p.inStock) || [];
     if (valid.length === 0) return { price: 0, pharmacy: "Unknown" };
@@ -71,7 +68,17 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen pt-24 pb-12">
       <div className="container mx-auto px-4 max-w-4xl">
-        <h1 className="text-2xl font-bold text-foreground mb-6">My Dashboard</h1>
+        
+        {/* 🛠️ UPDATED: Added a persistent header with a Search button! */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+          <h1 className="text-2xl font-bold text-foreground">My Dashboard</h1>
+          <Button 
+            onClick={() => navigate('/search')} 
+            className="gap-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto shadow-sm"
+          >
+            <Search className="h-4 w-4" /> Find More Medicines
+          </Button>
+        </div>
 
         <Tabs defaultValue="wishlist">
           <TabsList className="rounded-lg mb-6">
@@ -89,9 +96,12 @@ const Dashboard = () => {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : wishlistMedicines.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
+              <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-xl bg-card/50">
                 <Heart className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p>Your wishlist is empty. Start adding medicines!</p>
+                <p className="mb-5">Your wishlist is empty. Start adding medicines!</p>
+                <Button onClick={() => navigate('/search')} variant="outline" className="gap-2 rounded-lg">
+                  <Search className="h-4 w-4" /> Browse Medicines
+                </Button>
               </div>
             ) : (
               wishlistMedicines.map((m) => {
@@ -124,9 +134,12 @@ const Dashboard = () => {
 
           <TabsContent value="alerts" className="space-y-3">
             {priceAlerts.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
+              <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-xl bg-card/50">
                 <Bell className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p>No price alerts set yet. Search for medicines and set alerts!</p>
+                <p className="mb-5">No price alerts set yet. Search for medicines and set alerts!</p>
+                <Button onClick={() => navigate('/search')} variant="outline" className="gap-2 rounded-lg">
+                  <Search className="h-4 w-4" /> Find Medicines
+                </Button>
               </div>
             ) : (
               priceAlerts.map((alert) => (

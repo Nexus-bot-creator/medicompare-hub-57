@@ -6,10 +6,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import MedicineCard from "@/components/MedicineCard";
 import FilterSidebar from "@/components/FilterSidebar";
 import { getLowestPrice, pharmacies, type Medicine } from "@/lib/mock-data"; 
-// NEW: Import useApp to get the user's profile!
 import { useApp } from "@/contexts/AppContext"; 
 
-// 1. ADDED includeLocal to the interface
 export interface Filters {
   sortBy: "low" | "high";
   inStockOnly: boolean;
@@ -25,20 +23,21 @@ const defaultFilters: Filters = {
   selectedPharmacies: [...pharmacies],
   priceRange: [0, 200],
   location: "",
-  includeLocal: false, // Default to false
+  includeLocal: false, 
 };
 
 const SearchResults = () => {
-  const [searchParams] = useSearchParams();
+  // 🛠️ UPDATED: Added setSearchParams
+  const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
-  const { userProfile } = useApp(); // NEW: Pull the user profile
+  const { userProfile } = useApp(); 
   
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [liveMedicines, setLiveMedicines] = useState<Medicine[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [resetKey, setResetKey] = useState(0);
 
-  // NEW: Smart default setup. If they log in and have a pincode, auto-turn on local!
   useEffect(() => {
     if (userProfile?.default_pincode && filters.location === "") {
       setFilters(prev => ({
@@ -55,7 +54,6 @@ const SearchResults = () => {
       try {
         let url = `http://127.0.0.1:8000/api/medicines/search/?q=${query}`;
         
-        // NEW LOGIC: Only send pincode if the toggle is ON
         if (filters.includeLocal) {
           const pincode = (filters.location || "").trim();
           if (/^\d{6}$/.test(pincode)) {
@@ -77,7 +75,20 @@ const SearchResults = () => {
 
     const timeoutId = setTimeout(() => fetchMedicines(), 300);
     return () => clearTimeout(timeoutId);
-  }, [query, filters.location, filters.includeLocal]); // Run when toggle changes!
+  }, [query, filters.location, filters.includeLocal]); 
+
+  const handleResetFilters = () => {
+    setFilters({
+      ...defaultFilters, 
+      location: userProfile?.default_pincode || "",
+      includeLocal: !!userProfile?.default_pincode, 
+    });
+    setResetKey(prev => prev + 1);
+    
+    // 🛠️ NEW: Clear the search term from the URL
+    searchParams.delete("q");
+    setSearchParams(searchParams);
+  };
 
   const filtered = useMemo(() => {
     let result = liveMedicines.filter((m) => {
@@ -123,8 +134,7 @@ const SearchResults = () => {
             <SheetContent side="left" className="w-80 p-6">
               <SheetHeader><SheetTitle>Filters</SheetTitle></SheetHeader>
               <div className="mt-4">
-                {/* Make sure to pass userProfile to the sidebar! */}
-                <FilterSidebar filters={filters} onChange={setFilters} userProfile={userProfile} />
+                <FilterSidebar key={`mobile-${resetKey}`} filters={filters} onChange={setFilters} userProfile={userProfile} />
               </div>
             </SheetContent>
           </Sheet>
@@ -133,11 +143,12 @@ const SearchResults = () => {
         <div className="flex gap-8">
           <aside className="hidden lg:block w-64 shrink-0">
             <div className="sticky top-20">
-              <FilterSidebar filters={filters} onChange={setFilters} userProfile={userProfile} />
+              <FilterSidebar key={`desktop-${resetKey}`} filters={filters} onChange={setFilters} userProfile={userProfile} />
+              
               <Button
                 variant="ghost"
                 className="mt-3 text-xs text-muted-foreground w-full"
-                onClick={() => setFilters(defaultFilters)}
+                onClick={handleResetFilters} 
               >
                 <X className="h-3 w-3 mr-1" /> Reset Filters
               </Button>
@@ -156,7 +167,7 @@ const SearchResults = () => {
             ) : filtered.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-lg text-muted-foreground">No medicines found matching your criteria.</p>
-                <Button variant="outline" className="mt-4 rounded-lg" onClick={() => setFilters(defaultFilters)}>
+                <Button variant="outline" className="mt-4 rounded-lg" onClick={handleResetFilters}>
                   Reset Filters
                 </Button>
               </div>
