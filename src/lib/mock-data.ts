@@ -93,12 +93,6 @@ export const medicines: Medicine[] = [
       { pharmacy: "Sharma Medicos", price: 82, inStock: true, url: "#", pincode: "110001", area: "Connaught Place", city: "New Delhi", distanceKm: 0.5 },
     ],
   },
-    prices: [
-      { pharmacy: "PharmEasy", price: 85, inStock: true, url: "#", pincode: "560034", area: "Koramangala", city: "Bengaluru", distanceKm: 2.1 },
-      { pharmacy: "Apollo Pharmacy", price: 78, inStock: true, url: "#", pincode: "560001", area: "MG Road", city: "Bengaluru", distanceKm: 1.5 },
-      { pharmacy: "MedPlus", price: 92, inStock: false, url: "#", pincode: "600001", area: "Parrys", city: "Chennai", distanceKm: 4.0 },
-    ],
-  },
   {
     id: "3", name: "Metformin", dosage: "500mg", form: "Tablet", manufacturer: "USV Ltd",
     category: "Diabetes",
