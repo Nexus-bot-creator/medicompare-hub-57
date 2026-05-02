@@ -46,6 +46,15 @@ interface AppContextType {
   
   editProfileOpen: boolean;
   setEditProfileOpen: (v: boolean) => void;
+
+  // Cart (single-pincode rule)
+  cart: CartItem[];
+  cartPincode: string | null;
+  addToCart: (item: Omit<CartItem, "quantity">, quantity?: number) => { ok: true } | { ok: false; reason: "pincode-conflict"; existingPincode: string };
+  forceReplaceCart: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
+  updateCartQuantity: (medicineId: string, pharmacy: string, quantity: number) => void;
+  removeFromCart: (medicineId: string, pharmacy: string) => void;
+  clearCart: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
