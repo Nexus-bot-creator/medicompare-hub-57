@@ -20,7 +20,8 @@ const initialsOf = (name?: string) => {
 const ProfileMenu = () => {
   const { userProfile, isProfileLoading, logout, setEditProfileOpen } = useApp();
 
-  const pincodeMissing = !userProfile?.pincode || !/^\d{6}$/.test(userProfile.pincode);
+  // 🛠️ FIXED: Updated to default_pincode
+  const pincodeMissing = !userProfile?.default_pincode || !/^\d{6}$/.test(userProfile.default_pincode);
 
   const handleLogout = () => {
     logout();
@@ -101,8 +102,9 @@ const ProfileMenu = () => {
               <DetailRow
                 icon={<MapPin className="h-4 w-4" />}
                 label="Default Pincode"
-                value={userProfile?.pincode || "Required"}
-                muted={!userProfile?.pincode}
+                // 🛠️ FIXED: Updated to default_pincode
+                value={userProfile?.default_pincode || "Required"}
+                muted={!userProfile?.default_pincode}
                 warning={pincodeMissing}
               />
               {pincodeMissing && (

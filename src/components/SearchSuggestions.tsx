@@ -1,6 +1,7 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, TrendingUp, Pill } from "lucide-react";
-import { medicines, getLowestPrice } from "@/lib/mock-data";
+import { Search, TrendingUp, Pill, Loader2 } from "lucide-react";
+import { useApp } from "@/contexts/AppContext";
 
 const popularSearches = ["Paracetamol", "Vitamin D3", "Cetirizine", "Amoxicillin"];
 const categories = ["Pain Relief", "Antibiotics", "Diabetes", "Heart Health", "Allergy", "Vitamins"];
@@ -13,21 +14,46 @@ interface Props {
 
 const SearchSuggestions = ({ query, onSelect, visible }: Props) => {
   const navigate = useNavigate();
+  const { userProfile } = useApp(); // Used to get accurate local pricing!
+  
+  const [matchedMedicines, setMatchedMedicines] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const q = query.toLowerCase().trim();
 
+  // 🚀 The Debounced API Fetch
+  useEffect(() => {
+    if (!q) {
+      setMatchedMedicines([]);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        let url = `http://127.0.0.1:8000/api/medicines/search/?q=${encodeURIComponent(q)}`;
+        
+        // If they have a pincode saved, pass it so the "from ₹XX" price is completely accurate!
+        if (userProfile?.default_pincode) {
+          url += `&pincode=${userProfile.default_pincode}`;
+        }
+        
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setMatchedMedicines(data.slice(0, 5)); // Show max 5 suggestions
+        }
+      } catch (error) {
+        console.error("Failed to fetch suggestions", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300); // Waits 300ms after the user stops typing
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [q, userProfile?.default_pincode]);
+
   if (!visible) return null;
-
-
-  const matchedMedicines = q
-    ? medicines
-        .filter(
-          (m) =>
-            m.name.toLowerCase().includes(q) ||
-            m.category.toLowerCase().includes(q)
-        )
-        .slice(0, 5)
-    : [];
 
   const matchedCategories = q
     ? categories.filter((c) => c.toLowerCase().includes(q))
@@ -39,6 +65,13 @@ const SearchSuggestions = ({ query, onSelect, visible }: Props) => {
 
   const handleSearchClick = (term: string) => {
     onSelect(term);
+  };
+
+  // Helper to calculate the lowest live price
+  const getLowestPrice = (prices: any[]) => {
+    const valid = prices?.filter((p) => p.inStock) || [];
+    if (valid.length === 0) return { price: 0 };
+    return valid.reduce((min, curr) => (curr.price < min.price ? curr : min));
   };
 
   return (
@@ -83,14 +116,22 @@ const SearchSuggestions = ({ query, onSelect, visible }: Props) => {
         </div>
       )}
 
-      {/* Query results */}
-      {q && matchedMedicines.length === 0 && matchedCategories.length === 0 && (
+      {/* Loading state */}
+      {q && isLoading && (
+        <div className="p-6 flex justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {/* No Results state */}
+      {q && !isLoading && matchedMedicines.length === 0 && matchedCategories.length === 0 && (
         <div className="p-4 text-center text-sm text-muted-foreground">
           No suggestions found. Press Enter to search.
         </div>
       )}
 
-      {q && matchedCategories.length > 0 && (
+      {/* Category matches */}
+      {q && !isLoading && matchedCategories.length > 0 && (
         <div className="px-1 pt-2 pb-1">
           <p className="text-xs font-medium text-muted-foreground px-3 mb-1">Categories</p>
           {matchedCategories.map((cat) => (
@@ -107,7 +148,8 @@ const SearchSuggestions = ({ query, onSelect, visible }: Props) => {
         </div>
       )}
 
-      {q && matchedMedicines.length > 0 && (
+      {/* Medicine matches */}
+      {q && !isLoading && matchedMedicines.length > 0 && (
         <div className="px-1 pb-2 pt-1">
           <p className="text-xs font-medium text-muted-foreground px-3 mb-1">Medicines</p>
           {matchedMedicines.map((m) => {
@@ -119,12 +161,20 @@ const SearchSuggestions = ({ query, onSelect, visible }: Props) => {
                 onClick={() => handleMedicineClick(m.id)}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-lg transition-colors flex items-center justify-between group"
               >
+                <div className="flex flex-col">
                 <div>
                   <span className="text-foreground font-medium">{m.name}</span>
                   <span className="text-muted-foreground ml-1.5 text-xs">
                     {m.dosage} · {m.form}
                   </span>
                 </div>
+                {/* 🛠️ NEW: Display the Salt name so users know why this matched! */}
+                {m.salt && (
+                  <span className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px]">
+                    Contains: {m.salt}
+                  </span>
+                )}
+              </div>
                 <span className="text-primary font-semibold text-xs">
                   from ₹{lowest.price}
                 </span>

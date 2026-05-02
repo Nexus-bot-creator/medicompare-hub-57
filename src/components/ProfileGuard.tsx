@@ -10,7 +10,10 @@ const ProfileGuard = () => {
 
   useEffect(() => {
     if (!isLoggedIn || isProfileLoading || !userProfile) return;
-    const valid = /^\d{6}$/.test(userProfile.pincode ?? "");
+    
+    // 🛠️ FIXED: Look for default_pincode instead of pincode!
+    const valid = /^\d{6}$/.test(userProfile.default_pincode ?? "");
+    
     // Only auto-prompt once per user; if they've dismissed/saved before, don't nag again.
     const dismissedKey = `profilePromptShown:${userProfile.email || userProfile.name || "anon"}`;
     const alreadyShown = typeof window !== "undefined" && localStorage.getItem(dismissedKey) === "true";

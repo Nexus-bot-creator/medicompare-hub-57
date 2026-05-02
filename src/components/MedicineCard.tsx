@@ -22,10 +22,10 @@ const MedicineCard = ({ medicine, index = 0, sortBy = "low" }: Props) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   
-  // NEW: State to control the Price Alert Popup
+  // State to control the Price Alert Popup
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   
-  // NEW: State to hold the price the user types in (defaults to 10% off)
+  // State to hold the price the user types in (defaults to 10% off)
   const lowest = getLowestPrice(medicine.prices);
   const [customPrice, setCustomPrice] = useState(Math.round(lowest.price * 0.9));
 
@@ -52,21 +52,20 @@ const MedicineCard = ({ medicine, index = 0, sortBy = "low" }: Props) => {
     toast.success(inWishlist ? "Removed from Wishlist" : "Added to Wishlist!");
   };
 
-  // UPDATED: This now runs when they click "Save" inside the popup
   const handleAlertSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     addPriceAlert({
       id: `alert-${medicine.id}`,
       medicineId: medicine.id,
-      targetPrice: customPrice, // Uses the price they typed!
+      targetPrice: customPrice, 
       currentPrice: lowest.price,
       medicineName: medicine.name,
       dosage: medicine.dosage,
       status: "active",
     });
     
-    setIsAlertOpen(false); // Close the popup
+    setIsAlertOpen(false); 
     toast.success("Price Alert Set!", {
       description: `We'll notify you when ${medicine.name} drops below ₹${customPrice}`,
     });
@@ -87,6 +86,13 @@ const MedicineCard = ({ medicine, index = 0, sortBy = "low" }: Props) => {
                 <h3 className="font-semibold text-foreground text-base truncate hover:text-primary transition-colors">{medicine.name}</h3>
                 <p className="text-sm text-muted-foreground">{medicine.dosage} · {medicine.form}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{medicine.manufacturer}</p>
+                
+                {/* 🛠️ NEW: The Salt Display Badge! */}
+                {medicine.salt && (
+                  <p className="text-[11px] text-muted-foreground mt-1.5 bg-muted/50 inline-block px-2 py-0.5 rounded border border-border/50">
+                    Contains: <span className="font-medium text-foreground/80">{medicine.salt}</span>
+                  </p>
+                )}
               </div>
               {savings > 0 && (
                 <Badge variant="secondary" className="bg-accent text-accent-foreground text-xs shrink-0">
@@ -135,7 +141,6 @@ const MedicineCard = ({ medicine, index = 0, sortBy = "low" }: Props) => {
                 <Heart className={`h-4 w-4 ${inWishlist ? "fill-current" : ""}`} />
               </Button>
               
-              {/* UPDATED: Clicking the bell now opens the popup */}
               <Button variant="outline" size="icon" className="rounded-lg h-9 w-9 shrink-0" onClick={() => setIsAlertOpen(true)}>
                 <Bell className="h-4 w-4" />
               </Button>
@@ -144,7 +149,7 @@ const MedicineCard = ({ medicine, index = 0, sortBy = "low" }: Props) => {
         </Card>
       </div>
 
-      {/* NEW: The Price Alert Popup UI */}
+      {/* The Price Alert Popup UI */}
       <Dialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <DialogContent className="sm:max-w-sm rounded-2xl">
           <DialogHeader>
@@ -166,7 +171,7 @@ const MedicineCard = ({ medicine, index = 0, sortBy = "low" }: Props) => {
                 id={`target-${medicine.id}`}
                 type="number"
                 min="1"
-                max={lowest.price - 1} // Force them to pick a price lower than current!
+                max={lowest.price > 1 ? lowest.price - 1 : 1} 
                 value={customPrice}
                 onChange={(e) => setCustomPrice(Number(e.target.value))}
                 required

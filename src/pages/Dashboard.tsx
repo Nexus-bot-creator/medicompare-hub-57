@@ -1,14 +1,55 @@
-import { Heart, Bell, Trash2, ArrowDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, Bell, Trash2, ArrowDown, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/contexts/AppContext";
-import { medicines, getLowestPrice } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 const Dashboard = () => {
   const { wishlist, toggleWishlist, priceAlerts, removePriceAlert, isLoggedIn, setAuthModal } = useApp();
+  
+  // NEW: State to hold the actual fetched medicines from Django
+  const [wishlistMedicines, setWishlistMedicines] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // NEW: Fetch medicine details whenever the wishlist IDs change!
+  useEffect(() => {
+    const fetchWishlistData = async () => {
+      if (wishlist.length === 0) {
+        setWishlistMedicines([]);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        // Fetch all wishlist medicines in parallel
+        const promises = wishlist.map(id => 
+          fetch(`http://127.0.0.1:8000/api/medicines/${id}/`).then(res => res.ok ? res.json() : null)
+        );
+        const results = await Promise.all(promises);
+        
+        // Filter out any nulls (in case a medicine was deleted from the database)
+        setWishlistMedicines(results.filter(m => m !== null));
+      } catch (error) {
+        console.error("Failed to fetch wishlist medicines", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isLoggedIn) {
+      fetchWishlistData();
+    }
+  }, [wishlist, isLoggedIn]);
+
+  // NEW: Local helper to calculate lowest price from real Django data
+  const getLowestPrice = (prices: any[]) => {
+    const valid = prices?.filter((p) => p.inStock) || [];
+    if (valid.length === 0) return { price: 0, pharmacy: "Unknown" };
+    return valid.reduce((min, curr) => (curr.price < min.price ? curr : min));
+  };
 
   if (!isLoggedIn) {
     return (
@@ -27,8 +68,6 @@ const Dashboard = () => {
     );
   }
 
-  const wishlistMedicines = medicines.filter((m) => wishlist.includes(m.id));
-
   return (
     <div className="min-h-screen pt-24 pb-12">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -37,7 +76,7 @@ const Dashboard = () => {
         <Tabs defaultValue="wishlist">
           <TabsList className="rounded-lg mb-6">
             <TabsTrigger value="wishlist" className="gap-2 rounded-md">
-              <Heart className="h-4 w-4" /> Wishlist ({wishlistMedicines.length})
+              <Heart className="h-4 w-4" /> Wishlist ({wishlist.length})
             </TabsTrigger>
             <TabsTrigger value="alerts" className="gap-2 rounded-md">
               <Bell className="h-4 w-4" /> Price Alerts ({priceAlerts.length})
@@ -45,7 +84,11 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="wishlist" className="space-y-3">
-            {wishlistMedicines.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : wishlistMedicines.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">
                 <Heart className="h-10 w-10 mx-auto mb-3 opacity-30" />
                 <p>Your wishlist is empty. Start adding medicines!</p>
@@ -68,7 +111,7 @@ const Dashboard = () => {
                         variant="ghost"
                         size="icon"
                         className="shrink-0 text-destructive hover:text-destructive"
-                        onClick={() => { toggleWishlist(m.id); toast.success("Removed from Wishlist"); }}
+                        onClick={() => { toggleWishlist(m.id.toString()); toast.success("Removed from Wishlist"); }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

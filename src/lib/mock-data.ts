@@ -18,6 +18,7 @@ export interface Medicine {
   name: string;
   dosage: string;
   form: string;
+  salt?: string; // <-- Add this!
   manufacturer: string;
   category: string;
   prices: PharmacyPrice[];
