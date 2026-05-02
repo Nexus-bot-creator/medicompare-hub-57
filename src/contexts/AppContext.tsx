@@ -288,9 +288,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUserProfile(null);
     setWishlist([]);    
     setPriceAlerts([]); 
+    setCart([]);
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("userProfile");
+    localStorage.removeItem("cart");
   }, []);
 
   return (
