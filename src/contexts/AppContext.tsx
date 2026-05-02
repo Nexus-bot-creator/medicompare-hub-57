@@ -80,6 +80,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem("cart");
+      return raw ? (JSON.parse(raw) as CartItem[]) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    if (cart.length > 0) localStorage.setItem("cart", JSON.stringify(cart));
+    else localStorage.removeItem("cart");
+  }, [cart]);
+
+  const cartPincode = cart[0]?.pincode ?? null;
+
+  const addToCart = useCallback(
+    (item: Omit<CartItem, "quantity">, quantity: number = 1) => {
+      let result: { ok: true } | { ok: false; reason: "pincode-conflict"; existingPincode: string } = { ok: true };
+      setCart((prev) => {
+        if (prev.length > 0 && prev[0].pincode !== item.pincode) {
+          result = { ok: false, reason: "pincode-conflict", existingPincode: prev[0].pincode };
+          return prev;
+        }
+        const existing = prev.find((c) => c.medicineId === item.medicineId && c.pharmacy === item.pharmacy);
+        if (existing) {
+          return prev.map((c) =>
+            c === existing ? { ...c, quantity: c.quantity + quantity } : c
+          );
+        }
+        return [...prev, { ...item, quantity }];
+      });
+      return result;
+    },
+    []
+  );
+
+  const forceReplaceCart = useCallback((item: Omit<CartItem, "quantity">, quantity: number = 1) => {
+    setCart([{ ...item, quantity }]);
+  }, []);
+
+  const updateCartQuantity = useCallback((medicineId: string, pharmacy: string, quantity: number) => {
+    setCart((prev) =>
+      prev
+        .map((c) => (c.medicineId === medicineId && c.pharmacy === pharmacy ? { ...c, quantity } : c))
+        .filter((c) => c.quantity > 0)
+    );
+  }, []);
+
+  const removeFromCart = useCallback((medicineId: string, pharmacy: string) => {
+    setCart((prev) => prev.filter((c) => !(c.medicineId === medicineId && c.pharmacy === pharmacy)));
+  }, []);
+
+  const clearCart = useCallback(() => setCart([]), []);
+
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return !!localStorage.getItem("access_token");
