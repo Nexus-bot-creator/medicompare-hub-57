@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,22 @@ import { CreditCard, Loader2, Lock, Wallet, Banknote } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { toast } from "sonner";
 
+// 🛠️ REQUIRED: Utility function to load the Razorpay checkout script safely
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 type Method = "card" | "upi" | "cod";
 
 const CheckoutPayment = () => {
   const navigate = useNavigate();
-  const { cart, clearCart } = useApp();
+  const { cart, clearCart, setAuthModal, userProfile } = useApp();
 
   const [method, setMethod] = useState<Method>("card");
   const [card, setCard] = useState({ number: "", name: "", expiry: "", cvv: "" });
@@ -26,7 +37,9 @@ const CheckoutPayment = () => {
 
   useEffect(() => {
     if (cart.length === 0) navigate("/cart", { replace: true });
-    if (!sessionStorage.getItem("checkout:address")) navigate("/checkout/address", { replace: true });
+    if (!sessionStorage.getItem("checkout:address_id")) {
+      navigate("/checkout/address", { replace: true });
+    }
   }, [cart.length, navigate]);
 
   const validate = (): string | null => {
@@ -41,21 +54,145 @@ const CheckoutPayment = () => {
     return null;
   };
 
-  const handlePay = (e: React.FormEvent) => {
+  // 🛠️ REQUIRED: Helper function to finalize the order UI state after success
+  const finalizeOrder = (dbOrderId: string) => {
+    const addressData = JSON.parse(sessionStorage.getItem("checkout:address") || "{}");
+    
+    sessionStorage.setItem("checkout:order", JSON.stringify({
+      orderId: `ORD-${dbOrderId}`, 
+      method, 
+      total, 
+      items: cart, 
+      address: addressData, 
+      placedAt: new Date().toISOString(),
+    }));
+    
+    sessionStorage.removeItem("checkout:address");
+    sessionStorage.removeItem("checkout:address_id");
+    clearCart();
+    navigate("/checkout/success", { replace: true });
+  };
+
+  const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     const err = validate();
     if (err) { toast.error(err); return; }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("Please log in to finalize your order.");
+      setAuthModal("login");
+      return;
+    }
+
+    const addressId = sessionStorage.getItem("checkout:address_id");
+    if (!addressId) {
+       toast.error("Delivery address missing. Please enter it again.");
+       navigate("/checkout/address");
+       return;
+    }
+
     setProcessing(true);
-    setTimeout(() => {
-      const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;
-      const address = JSON.parse(sessionStorage.getItem("checkout:address") || "{}");
-      sessionStorage.setItem("checkout:order", JSON.stringify({
-        orderId, method, total, items: cart, address, placedAt: new Date().toISOString(),
-      }));
-      sessionStorage.removeItem("checkout:address");
-      clearCart();
-      navigate("/checkout/success", { replace: true });
-    }, 1400);
+
+    try {
+      // 1. Send the cart to Django to create the 'PENDING' Order
+      const payload = {
+        address_id: addressId,
+        subtotal: subtotal,
+        delivery_fee: deliveryFee,
+        total_amount: total,
+        cart_items: cart.map(item => ({
+           medicineId: item.medicineId,
+           pharmacy: item.pharmacy,
+           price: item.price,
+           quantity: item.quantity
+        }))
+      };
+
+      const res = await fetch("http://127.0.0.1:8000/api/checkout/create-order/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error("Failed to create order on server");
+      const data = await res.json();
+      
+      // 2. COD Bypasses Razorpay entirely!
+      if (method === "cod") {
+        toast.success("Order Placed Successfully!");
+        finalizeOrder(data.order_id);
+        return; 
+      }
+
+      // 3. Online Payments: Load Razorpay Script
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) {
+        toast.error("Razorpay SDK failed to load. Please check your connection.");
+        setProcessing(false);
+        return;
+      }
+
+      // 4. Configure the Razorpay Popup
+      const options = {
+        key: data.razorpay_key_id, 
+        amount: data.amount * 100, 
+        currency: data.currency,
+        name: "MediPedia",
+        description: "Medicine Order",
+        order_id: data.razorpay_order_id, 
+        
+        // 5. 🛠️ THE NEW VERIFICATION HANDLER
+        handler: async function (response: any) {
+          try {
+            // Send the secret signatures to Django to verify
+            const verifyRes = await fetch("http://127.0.0.1:8000/api/checkout/verify-payment/", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              })
+            });
+
+            if (!verifyRes.ok) throw new Error("Payment verification failed");
+
+            // If Django says it's good, finalize the order!
+            toast.success("Payment Successful & Verified!");
+            finalizeOrder(data.order_id);
+
+          } catch (err) {
+            console.error("Verification error:", err);
+            toast.error("Payment captured, but verification failed. Please contact support.");
+            setProcessing(false);
+          }
+        },
+        prefill: {
+          name: userProfile?.name || "Customer",
+          email: userProfile?.email || "customer@example.com",
+          contact: userProfile?.phone || "9999999999"
+        },
+        theme: {
+          color: "#059669" // Matches your Emerald Green brand color
+        }
+      };
+
+      // 6. Open the Razorpay Modal
+      const paymentObject = new (window as any).Razorpay(options);
+      
+      paymentObject.on('payment.failed', function (response: any) {
+        toast.error("Payment Failed", { description: response.error.description });
+        setProcessing(false);
+      });
+
+      paymentObject.open();
+
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred. Please try again.");
+      setProcessing(false);
+    } 
   };
 
   return (
@@ -144,7 +281,7 @@ const CheckoutPayment = () => {
                 Back
               </Button>
               <Button type="submit" disabled={processing} className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 gap-2 min-w-[160px]">
-                {processing ? (<><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>) : (<>Pay ₹{total}</>)}
+                {processing ? (<><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>) : (<>Pay ₹{total.toFixed(2)}</>)}
               </Button>
             </div>
           </form>
@@ -156,14 +293,14 @@ const CheckoutPayment = () => {
                 {cart.map((c) => (
                   <div key={`${c.medicineId}-${c.pharmacy}`} className="flex justify-between text-muted-foreground">
                     <span className="truncate pr-2">{c.medicineName} × {c.quantity}</span>
-                    <span className="text-foreground">₹{c.price * c.quantity}</span>
+                    <span className="text-foreground">₹{(c.price * c.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
-              <div className="border-t border-border pt-2 flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{subtotal}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{deliveryFee === 0 ? "Free" : `₹${deliveryFee}`}</span></div>
+              <div className="border-t border-border pt-2 flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{deliveryFee === 0 ? "Free" : `₹${deliveryFee.toFixed(2)}`}</span></div>
               <div className="border-t border-border pt-2 flex justify-between font-semibold">
-                <span>Total</span><span className="text-primary">₹{total}</span>
+                <span>Total</span><span className="text-primary">₹{total.toFixed(2)}</span>
               </div>
             </CardContent>
           </Card>

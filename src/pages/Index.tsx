@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Bell, TrendingDown, Pill, ArrowRight, CheckCircle2, Syringe, HeartPulse, BriefcaseMedical} from "lucide-react";
+import { Shield, Bell, TrendingDown, Pill, ArrowRight, CheckCircle2, FlaskConical, CreditCard, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CountUp from "@/components/CountUp";
 import FlowingMenu from '@/components/FlowingMenu';
@@ -33,8 +33,9 @@ const FeatureCard = ({ icon: Icon, title, desc, index }: { icon: React.ElementTy
   return (
     <div
       ref={ref}
-      className={`text-left p-7 rounded-2xl bg-card border border-border hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 transition-all duration-500 cursor-pointer group ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-        }`}
+      className={`text-left p-7 rounded-2xl bg-card border border-border hover:shadow-lg hover:bg-primary/5 hover:-translate-y-1 hover:border-primary/40 transition-all duration-500 cursor-pointer group ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+      }`}
       style={{ transitionDelay: `${index * 150}ms` }}
     >
       <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/15 transition-all duration-300">
@@ -104,9 +105,9 @@ const Index = () => {
     { icon: TrendingDown, title: "Real-Time Price Comparison", desc: "Instantly compare prices across 5+ licensed pharmacies to find the best deal on every medicine." },
     { icon: Bell, title: "Smart Price Alerts", desc: "Set your target price and get notified the moment a pharmacy drops below it. Never overpay again." },
     { icon: Shield, title: "Verified & Trusted", desc: "Every pharmacy in our network is licensed and verified, so you can shop with complete confidence." },
-    { icon: HeartPulse, title: "Title-4", desc: "Instantly compare prices across 5+ licensed pharmacies to find the best deal on every medicine." },
-    { icon: BriefcaseMedical, title: "Title-5", desc: "Set your target price and get notified the moment a pharmacy drops below it. Never overpay again." },
-    { icon: Syringe, title: "Title-6", desc: "Every pharmacy in our network is licensed and verified, so you can shop with complete confidence." },
+    { icon: FlaskConical, title: "Generic Alternatives", desc: "Discover equivalent medicines with the exact same active salts to save up to 80% on your prescriptions." },
+    { icon: CreditCard, title: "Secure Checkout", desc: "Pay safely via UPI, Credit Card, or Cash on Delivery through our unified, highly encrypted platform." },
+    { icon: MapPin, title: "Local Availability", desc: "Enter your pincode to instantly verify stock and delivery times for partner pharmacies near you." },
   ];
 
   const stats = [
@@ -117,9 +118,10 @@ const Index = () => {
   ];
 
   const steps = [
-    { num: "01", title: "Search Your Medicine", desc: "Type the name of your prescription or browse by category." },
-    { num: "02", title: "Compare Prices Instantly", desc: "See real-time prices from all major online pharmacies side by side." },
-    { num: "03", title: "Save & Get Alerts", desc: "Buy at the lowest price or set an alert for future price drops." },
+    { num: "01", title: "Search & Compare", desc: "Find your medicine and instantly see real-time prices across major pharmacies." },
+    { num: "02", title: "Add to Cart", desc: "Select the best deal and easily build your complete prescription cart." },
+    { num: "03", title: "Secure Checkout", desc: "Select your delivery address and pay safely via UPI, Card, or COD." },
+    { num: "04", title: "Track & Manage", desc: "Monitor your active orders and manage saved addresses from your dashboard." },
   ];
 
   return (
@@ -223,12 +225,12 @@ const Index = () => {
 
       {/* How it works */}
       <section id="how-it-works" className="py-20 px-4 bg-secondary/30 border-y border-border">
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-14">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">How It Works</h2>
-            <p className="text-muted-foreground max-w-md mx-auto">Three simple steps to start saving on your prescriptions.</p>
+            <p className="text-muted-foreground max-w-md mx-auto">Four simple steps to start saving on your prescriptions today.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8">
             {steps.map((step, i) => (
               <StepCard key={step.num} num={step.num} title={step.title} desc={step.desc} index={i} />
             ))}
@@ -253,7 +255,7 @@ const Index = () => {
 
       <footer className="border-t border-border py-8 px-4">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
-          © 2026 MediCompare. Compare smarter, save more.
+          © 2026 MediPedia. Compare smarter, save more.
         </div>
       </footer>
     </div>

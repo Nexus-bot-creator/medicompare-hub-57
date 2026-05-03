@@ -22,7 +22,7 @@ const ONLINE_PHARMACIES = ["PharmEasy", "1mg", "Tata 1mg", "Netmeds", "Apollo Ph
 
 const MedicineDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { toggleWishlist, isInWishlist, addPriceAlert, userProfile } = useApp();
+  const { toggleWishlist, isInWishlist, addPriceAlert, userProfile, addToCart } = useApp();
 
   const [medicine, setMedicine] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -150,11 +150,32 @@ const MedicineDetail = () => {
   };
 
   // 🛠️ NEW: Placeholder cart logic
+  // 🛠️ REPLACE THE OLD FUNCTION WITH THIS
   const handleAddToCart = (pharmacyName: string, price: number) => {
-    // We will wire this up to AppContext in the next step!
-    toast.success(`Added ${medicine.name} to Cart`, {
-      description: `From local vendor: ${pharmacyName}`,
-    });
+    // 1. Package the medicine data into a CartItem
+    const item = {
+      medicineId: medicine.id.toString(),
+      medicineName: medicine.name,
+      dosage: medicine.dosage,
+      pharmacy: pharmacyName,
+      pincode: activePincode || userProfile?.default_pincode || "Local", 
+      area: "Local Area", 
+      price: price,
+    };
+
+    // 2. Send to global state
+    const result = addToCart(item, 1);
+
+    // 3. Handle success or pincode-conflict!
+    if (result.ok) {
+      toast.success(`Added to Cart`, {
+        description: `${medicine.name} from ${pharmacyName}`,
+      });
+    } else {
+      toast.error("Location Conflict", {
+        description: `Your cart already has items from pincode ${result.existingPincode}. Please clear your cart to order from a new location.`,
+      });
+    }
   };
 
   const renderStars = (rating: number) => {

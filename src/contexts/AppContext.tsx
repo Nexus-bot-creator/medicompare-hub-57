@@ -18,6 +18,7 @@ export interface UserProfile {
   phone: string;
   default_pincode: string; // <-- FIXED: Renamed to match Django!
   avatarUrl?: string;
+  default_address?: string; // 🛠️ NEW
 }
 
 interface AppContextType {
@@ -177,6 +178,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             email: data.email,
             phone: data.phone_number || "",
             default_pincode: data.default_pincode || "", // <-- FIXED: Map directly to default_pincode!
+            // 🛠️ NEW: Map the default address from Django
+            default_address: data.default_address || "",
           });
         } else if (profileRes.status === 401) {
           logout();

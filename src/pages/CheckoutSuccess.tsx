@@ -40,7 +40,7 @@ const CheckoutSuccess = () => {
           <CardContent className="p-5 space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Order ID</span><span className="font-mono text-foreground">{order.orderId}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span className="text-foreground uppercase">{order.method}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Total Paid</span><span className="text-primary font-semibold">₹{order.total}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Total Paid</span><span className="text-primary font-semibold">₹{order.total.toFixed(2)}</span></div>
           </CardContent>
         </Card>
 

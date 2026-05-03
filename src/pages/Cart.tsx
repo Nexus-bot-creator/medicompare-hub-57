@@ -103,14 +103,14 @@ const Cart = () => {
               <CardContent className="p-5 space-y-4">
                 <h2 className="font-semibold text-foreground">Order Summary</h2>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">₹{subtotal}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">₹{subtotal.toFixed(2)}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span className="text-foreground">{deliveryFee === 0 ? "Free" : `₹${deliveryFee}`}</span></div>
                   {subtotal < 199 && subtotal > 0 && (
-                    <p className="text-[11px] text-muted-foreground">Add ₹{199 - subtotal} more for free delivery.</p>
+                    <p className="text-[11px] text-muted-foreground">Add ₹{(199 - subtotal).toFixed(2)} more for free delivery.</p>
                   )}
                 </div>
                 <div className="border-t border-border pt-3 flex justify-between font-semibold">
-                  <span>Total</span><span className="text-primary">₹{total}</span>
+                  <span>Total</span><span className="text-primary">₹{total.toFixed(2)}</span>
                 </div>
                 <Button className="w-full rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 gap-2" onClick={handleCheckout}>
                   Buy Now <ArrowRight className="h-4 w-4" />
