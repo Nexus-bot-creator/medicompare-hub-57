@@ -31,6 +31,7 @@ MediPedia is a full-stack e-commerce Minimum Viable Product (MVP) designed to he
 *   PostgreSQL (Database)
 *   Simple JWT (Authentication)
 *   Razorpay API (Payment Processing)
+*   Indian Post Office API (for pincode-to-city/state autofill)
 
 ---
 
