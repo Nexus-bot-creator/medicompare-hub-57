@@ -1,73 +1,80 @@
-# Welcome to your Lovable project
+# MediPedia 💊 — Smart Medicine Aggregator
 
-## Project info
+> Stop overpaying for your medicines. Compare prices across India's top online pharmacies in seconds.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+MediPedia is a full-stack e-commerce Minimum Viable Product (MVP) designed to help users find, compare, and securely purchase medicines at the best possible prices. Built as a rapid 10-day development sprint by a two-person engineering team, this platform features real-time price comparisons, generic alternative suggestions, and a fully integrated checkout flow.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## ✨ Core Features
 
-**Use Lovable**
+*   **Secure Authentication:** Robust JWT-based login and registration system.
+*   **Search & Compare Engine:** Instantly search for medicines, view generic alternatives by salt composition, and compare prices across 5+ major pharmacies.
+*   **Smart Cart & Address Book:** Dynamic cart calculations, delivery fee thresholds, and a full CRUD address manager that auto-fills cities using government API pincode data.
+*   **Unified Checkout:** Secure payment gateway integration supporting UPI, Credit/Debit Cards, and Cash on Delivery (COD).
+*   **Personalized Dashboard:** A centralized user hub to track active orders, cancel pending deliveries, manage saved addresses, and monitor price drop alerts.
+*   **Premium UI/UX:** Fully responsive, modern interface with seamless Light/Dark mode, teal-blue gradient accents, and flowing animations.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+**Frontend Architecture (Client)**
+*   React 18 + TypeScript
+*   Vite (Build Tool)
+*   Tailwind CSS (Styling)
+*   Shadcn UI & Lucide React (Component Library & Icons)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**Backend Architecture (Server)**
+*   Python + Django
+*   Django REST Framework (DRF)
+*   PostgreSQL (Database)
+*   Simple JWT (Authentication)
+*   Razorpay API (Payment Processing)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## 🚀 Getting Started
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Prerequisites
+*   Node.js (v18+)
+*   Python (3.10+)
+*   PostgreSQL
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 1. Backend Setup
+\`\`\`bash
+# Navigate to the backend directory
+cd backend
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations and start the server
+python manage.py migrate
+python manage.py runserver
+\`\`\`
+
+### 2. Frontend Setup
+\`\`\`bash
+# Navigate to the frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start the development server
 npm run dev
-```
+\`\`\`
 
-**Edit a file directly in GitHub**
+The application will be running at `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 👥 Development Team
+Built by a two-person full-stack engineering team:
+*   **Backend Developer:** Focused on Django architecture, DRF API endpoints, and database schema.
+*   **Frontend Developer:** Focused on React UI/UX, state management, and API integration.
