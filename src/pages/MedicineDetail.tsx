@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-// 🛠️ ADDED: ShoppingCart icon
 import { ArrowLeft, Heart, Bell, ExternalLink, Star, TrendingDown, Package, Info, MapPin, Loader2, Home, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,13 +15,16 @@ import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-// 🛠️ NEW: List of known online giants. Anything else is treated as Local!
 const ONLINE_PHARMACIES = ["PharmEasy", "1mg", "Tata 1mg", "Netmeds", "Apollo Pharmacy"];
 
 const MedicineDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { toggleWishlist, isInWishlist, addPriceAlert, userProfile, addToCart } = useApp();
+  const { toggleWishlist, isInWishlist, addPriceAlert, userProfile, addToCart, forceReplaceCart } = useApp();
 
   const [medicine, setMedicine] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,9 @@ const MedicineDetail = () => {
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [customPrice, setCustomPrice] = useState(0);
+
+  const [pendingItem, setPendingItem] = useState<any>(null);
+  const [conflictPincode, setConflictPincode] = useState("");
 
   useEffect(() => {
     if (userProfile?.default_pincode && !searchInput) {
@@ -107,7 +112,6 @@ const MedicineDetail = () => {
   
   const lowestPrice = lowestPriceObj?.price || 0;
   const lowestPharmacy = lowestPriceObj?.pharmacy || "Unknown";
-  // 🛠️ NEW: Check if the lowest pharmacy is online or local
   const isLowestOnline = ONLINE_PHARMACIES.includes(lowestPharmacy);
 
   const highestPrice = Math.max(...medicine.prices.map((p: any) => p.price));
@@ -149,10 +153,15 @@ const MedicineDetail = () => {
     });
   };
 
-  // 🛠️ NEW: Placeholder cart logic
-  // 🛠️ REPLACE THE OLD FUNCTION WITH THIS
+  const handleBuyOnline = (url: string, pharmacyName: string) => {
+    if (url && url !== "#") {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      toast.info(`Redirecting to ${pharmacyName}…`, { description: "External link not configured in database." });
+    }
+  };
+
   const handleAddToCart = (pharmacyName: string, price: number) => {
-    // 1. Package the medicine data into a CartItem
     const item = {
       medicineId: medicine.id.toString(),
       medicineName: medicine.name,
@@ -163,18 +172,15 @@ const MedicineDetail = () => {
       price: price,
     };
 
-    // 2. Send to global state
-    const result = addToCart(item, 1);
+    const result = addToCart(item);
 
-    // 3. Handle success or pincode-conflict!
     if (result.ok) {
       toast.success(`Added to Cart`, {
         description: `${medicine.name} from ${pharmacyName}`,
       });
     } else {
-      toast.error("Location Conflict", {
-        description: `Your cart already has items from pincode ${result.existingPincode}. Please clear your cart to order from a new location.`,
-      });
+      setPendingItem(item);
+      setConflictPincode(result.existingPincode);
     }
   };
 
@@ -226,7 +232,6 @@ const MedicineDetail = () => {
                   <div className="space-y-2">
                     {medicine.prices.map((p: any) => {
                       const isLowest = p.price === lowestPrice && p.inStock;
-                      // 🛠️ NEW: Determine if this specific row is online or local
                       const isOnline = ONLINE_PHARMACIES.includes(p.pharmacy);
 
                       return (
@@ -245,12 +250,17 @@ const MedicineDetail = () => {
                             {!p.inStock && <span className="text-xs text-destructive">Out of stock</span>}
                             <span className={`text-lg font-bold ${isLowest ? "text-primary" : "text-foreground"}`}>₹{p.price}</span>
                             
-                            {/* 🛠️ NEW: Render different buttons based on Online vs Local */}
+                            {/* 🛠️ REMOVED THE DUPLICATE BUTTON HERE! */}
                             {p.inStock && isOnline && (
-                              <Button size="sm" variant={isLowest ? "default" : "outline"} className="rounded-lg gap-1 h-8 text-xs">
-                                <ExternalLink className="h-3 w-3" /> Buy Now
-                              </Button>
-                            )}
+                            <Button 
+                              size="sm" 
+                              variant={isLowest ? "default" : "outline"} 
+                              className="rounded-lg gap-1 h-8 text-xs"
+                              onClick={() => handleBuyOnline(p.url, p.pharmacy)}
+                            >
+                              <ExternalLink className="h-3 w-3" /> Buy Now
+                            </Button>
+                          )}
                             {p.inStock && !isOnline && (
                               <Button 
                                 size="sm" 
@@ -284,9 +294,11 @@ const MedicineDetail = () => {
                 </div>
                 <div className="space-y-2">
                   
-                  {/* 🛠️ NEW: Main Action Button updates based on lowest pharmacy type */}
                   {isLowestOnline ? (
-                    <Button className="w-full rounded-xl gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Button 
+                      className="w-full rounded-xl gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                      onClick={() => handleBuyOnline(lowestPriceObj?.url, lowestPharmacy)}
+                    >
                       <ExternalLink className="h-4 w-4" /> Buy Now from {lowestPharmacy}
                     </Button>
                   ) : (
@@ -527,12 +539,39 @@ const MedicineDetail = () => {
         </Tabs>
       </div>
 
+      <AlertDialog open={!!pendingItem} onOpenChange={(open) => { if (!open) setPendingItem(null); }}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch delivery pincode?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your cart already has items from pincode <strong>{conflictPincode}</strong>. Local
+              pharmacies can only ship within a single pincode. Clear your cart and add this item
+              from <strong>{pendingItem?.pincode}</strong> instead?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-lg">Keep current cart</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => {
+                if (!pendingItem) return;
+                forceReplaceCart(pendingItem);
+                toast.success("Cart cleared and item added", { description: `${pendingItem.medicineName} from ${pendingItem.pharmacy}` });
+                setPendingItem(null);
+              }}
+            >
+              Clear & Add
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
         <DialogContent className="sm:max-w-sm rounded-2xl">
           <DialogHeader>
             <DialogTitle>Set Price Alert</DialogTitle>
             <DialogDescription>
-              Get notified when the price of {medicine.name} drops.
+              Get notified when the price of {medicine?.name} drops.
             </DialogDescription>
           </DialogHeader>
           
@@ -543,9 +582,9 @@ const MedicineDetail = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor={`target-${medicine.id}`}>Your Target Price (₹)</Label>
+              <Label htmlFor={`target-${medicine?.id}`}>Your Target Price (₹)</Label>
               <Input
-                id={`target-${medicine.id}`}
+                id={`target-${medicine?.id}`}
                 type="number"
                 min="1"
                 max={lowestPrice > 1 ? lowestPrice - 1 : 1} 
