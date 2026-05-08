@@ -57,7 +57,7 @@ const CheckoutAddress = () => {
       }
 
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/checkout/addresses/", {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/checkout/addresses/`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
         
@@ -167,7 +167,7 @@ const CheckoutAddress = () => {
         is_default: true,
       };
 
-      const res = await fetch("http://127.0.0.1:8000/api/checkout/addresses/", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/checkout/addresses/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

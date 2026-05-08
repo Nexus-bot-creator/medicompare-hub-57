@@ -52,7 +52,7 @@ const SearchResults = () => {
     const fetchMedicines = async () => {
       setIsLoading(true);
       try {
-        let url = `http://127.0.0.1:8000/api/medicines/search/?q=${query}`;
+        let url = `${import.meta.env.VITE_API_URL}/api/medicines/search/?q=${query}`;
         
         if (filters.includeLocal) {
           const pincode = (filters.location || "").trim();

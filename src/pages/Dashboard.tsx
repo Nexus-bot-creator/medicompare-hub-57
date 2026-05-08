@@ -31,7 +31,7 @@ const Dashboard = () => {
       setIsLoadingWishlist(true);
       try {
         const promises = wishlist.map(id => 
-          fetch(`http://127.0.0.1:8000/api/medicines/${id}/`).then(res => res.ok ? res.json() : null)
+          fetch(`${import.meta.env.VITE_API_URL}/api/medicines/${id}/`).then(res => res.ok ? res.json() : null)
         );
         const results = await Promise.all(promises);
         setWishlistMedicines(results.filter(m => m !== null));
@@ -50,7 +50,7 @@ const Dashboard = () => {
       if (!token) return;
       setIsLoadingOrders(true);
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/user/orders/", {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/orders/`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
         if (res.ok) setOrders(await res.json());
@@ -69,7 +69,7 @@ const Dashboard = () => {
     if (!token) return;
     setIsLoadingAddresses(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/checkout/addresses/", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/checkout/addresses/`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) setAddresses(await res.json());
@@ -88,7 +88,7 @@ const Dashboard = () => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/user/orders/${orderId}/cancel/`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/orders/${orderId}/cancel/`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -108,7 +108,7 @@ const Dashboard = () => {
   const handleSetDefaultAddress = async (addressId: number) => {
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/checkout/addresses/${addressId}/`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/checkout/addresses/${addressId}/`, {
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -126,7 +126,7 @@ const Dashboard = () => {
     if (!window.confirm("Delete this address permanently?")) return;
     const token = localStorage.getItem("access_token");
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/checkout/addresses/${addressId}/`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/checkout/addresses/${addressId}/`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });

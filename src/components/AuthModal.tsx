@@ -26,7 +26,7 @@ const AuthModal = () => {
     try {
       if (isLogin) {
         // --- 1. LOG IN LOGIC ---
-        const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           // SimpleJWT expects the key to be "username", so we map email to username!
@@ -51,7 +51,7 @@ const AuthModal = () => {
 
       } else {
         // --- 2. SIGN UP LOGIC ---
-        const response = await fetch("http://127.0.0.1:8000/api/auth/register/", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email, password: password }),

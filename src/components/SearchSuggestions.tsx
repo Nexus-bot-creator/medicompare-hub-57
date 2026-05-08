@@ -31,7 +31,7 @@ const SearchSuggestions = ({ query, onSelect, visible }: Props) => {
     const delayDebounceFn = setTimeout(async () => {
       setIsLoading(true);
       try {
-        let url = `http://127.0.0.1:8000/api/medicines/search/?q=${encodeURIComponent(q)}`;
+        let url = `${import.meta.env.VITE_API_URL}/api/medicines/search/?q=${encodeURIComponent(q)}`;
         
         // If they have a pincode saved, pass it so the "from ₹XX" price is completely accurate!
         if (userProfile?.default_pincode) {

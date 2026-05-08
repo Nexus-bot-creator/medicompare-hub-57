@@ -65,7 +65,7 @@ const MedicineDetail = () => {
       setLoading(true);
       setError(false);
       try {
-        let url = `http://127.0.0.1:8000/api/medicines/${id}/`;
+        let url = `${import.meta.env.VITE_API_URL}/api/medicines/${id}/`;
         if (activePincode && /^\d{6}$/.test(activePincode.trim())) {
           url += `?pincode=${activePincode.trim()}`;
         }

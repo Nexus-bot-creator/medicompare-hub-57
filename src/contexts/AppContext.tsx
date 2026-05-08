@@ -170,7 +170,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const headers = { "Authorization": `Bearer ${token}` };
 
         // Fetch Profile
-        const profileRes = await fetch("http://127.0.0.1:8000/api/auth/profile/", { headers });
+        const profileRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/profile/`, { headers });
         if (profileRes.ok) {
           const data = await profileRes.json();
           setUserProfile({
@@ -187,14 +187,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
 
         // Fetch Wishlist
-        const wishlistRes = await fetch("http://127.0.0.1:8000/api/user/wishlist/", { headers });
+        const wishlistRes = await fetch(`${import.meta.env.VITE_API_URL}/api/user/wishlist/`, { headers });
         if (wishlistRes.ok) {
           const wlData = await wishlistRes.json();
           setWishlist(wlData);
         }
 
         // Fetch Price Alerts
-        const alertsRes = await fetch("http://127.0.0.1:8000/api/user/alerts/", { headers });
+        const alertsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/user/alerts/`, { headers });
         if (alertsRes.ok) {
           const alertsData = await alertsRes.json();
           setPriceAlerts(alertsData);
@@ -220,7 +220,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const token = localStorage.getItem("access_token");
     if (token) {
       try {
-        await fetch("http://127.0.0.1:8000/api/user/wishlist/", {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/user/wishlist/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -242,7 +242,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const token = localStorage.getItem("access_token");
     if (token) {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/user/alerts/", {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/alerts/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -270,7 +270,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const token = localStorage.getItem("access_token");
     if (token && !id.startsWith("alert-")) {
       try {
-        await fetch(`http://127.0.0.1:8000/api/user/alerts/${id}/`, {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/user/alerts/${id}/`, {
           method: "DELETE",
           headers: { "Authorization": `Bearer ${token}` }
         });

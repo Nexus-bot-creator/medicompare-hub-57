@@ -44,7 +44,7 @@ const EditProfileModal = () => {
       const token = localStorage.getItem("access_token");
       if (!token) throw new Error("You must be logged in to update your profile.");
 
-      const response = await fetch("http://127.0.0.1:8000/api/auth/profile/", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/profile/`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

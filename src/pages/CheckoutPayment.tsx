@@ -109,7 +109,7 @@ const CheckoutPayment = () => {
         }))
       };
 
-      const res = await fetch("http://127.0.0.1:8000/api/checkout/create-order/", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/checkout/create-order/`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify(payload)
@@ -146,7 +146,7 @@ const CheckoutPayment = () => {
         handler: async function (response: any) {
           try {
             // Send the secret signatures to Django to verify
-            const verifyRes = await fetch("http://127.0.0.1:8000/api/checkout/verify-payment/", {
+            const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/checkout/verify-payment/`, {
               method: "POST",
               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
               body: JSON.stringify({
