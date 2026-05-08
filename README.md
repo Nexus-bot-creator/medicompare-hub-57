@@ -6,6 +6,11 @@ MediPedia is a full-stack e-commerce Minimum Viable Product (MVP) designed to he
 
 ---
 
+🚀 **Live Demo:** [Click here to view the live website](https://medipedia-tau.vercel.app)
+
+*(Note: The backend is hosted on Render's free tier, so it might take 30-50 seconds to wake up on the first load!)*
+---
+
 ## ✨ Core Features
 
 *   **Secure Authentication:** Robust JWT-based login and registration system.
