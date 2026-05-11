@@ -39,6 +39,9 @@ const MedicineDetail = () => {
 
   const [pendingItem, setPendingItem] = useState<any>(null);
   const [conflictPincode, setConflictPincode] = useState("");
+  
+  // NEW: State for location loading spinner
+  const [isLocating, setIsLocating] = useState(false);
 
   useEffect(() => {
     if (userProfile?.default_pincode && !searchInput) {
@@ -83,6 +86,47 @@ const MedicineDetail = () => {
 
     fetchMedicine();
   }, [id, activePincode]);
+
+  // NEW: Geolocation function
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    toast.info("Finding your location...");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await response.json();
+          
+          const pincode = data.address?.postcode;
+          const city = data.address?.city || data.address?.state_district || "your area";
+
+          if (pincode) {
+            setSearchInput(pincode);
+            toast.success(`Location updated to ${city} (${pincode})`);
+          } else {
+            toast.error("Found your location, but couldn't detect the pincode.");
+            setSearchInput("Current Location"); 
+          }
+        } catch (error) {
+          toast.error("Failed to translate coordinates.");
+          setSearchInput("Current Location");
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        toast.error("Please allow location access in your browser.");
+        setIsLocating(false);
+      }
+    );
+  };
 
   if (loading) {
     return (
@@ -250,7 +294,6 @@ const MedicineDetail = () => {
                             {!p.inStock && <span className="text-xs text-destructive">Out of stock</span>}
                             <span className={`text-lg font-bold ${isLowest ? "text-primary" : "text-foreground"}`}>₹{p.price}</span>
                             
-                            {/* 🛠️ REMOVED THE DUPLICATE BUTTON HERE! */}
                             {p.inStock && isOnline && (
                             <Button 
                               size="sm" 
@@ -372,23 +415,15 @@ const MedicineDetail = () => {
                       <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">Or</span></div>
                     </div>
 
+                    {/* NEW: Updated Button with Geolocation Logic */}
                     <Button 
                       variant="outline" 
                       className="w-full h-8 text-xs gap-1"
-                      onClick={() => {
-                        if ("geolocation" in navigator) {
-                          navigator.geolocation.getCurrentPosition(
-                            () => {
-                              setSearchInput("Current Location");
-                              toast.success("Using current location");
-                            },
-                            () => toast.error("Location access denied")
-                          );
-                        }
-                      }}
+                      onClick={handleUseMyLocation}
+                      disabled={isLocating}
                     >
-                      <MapPin className="h-3 w-3" />
-                      Use My Location
+                      {isLocating ? <Loader2 className="h-3 w-3 animate-spin" /> : <MapPin className="h-3 w-3" />}
+                      {isLocating ? "Locating..." : "Use My Location"}
                     </Button>
                   </div>
                 )}
