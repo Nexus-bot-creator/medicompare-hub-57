@@ -5,7 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MapPin, Home } from "lucide-react"; // NEW: Imported Home icon
+import { MapPin, Home, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { pharmacies } from "@/lib/mock-data";
 
 interface Filters {
@@ -25,7 +27,50 @@ interface Props {
 
 const FilterSidebar = ({ filters, onChange, userProfile }: Props) => {
   const update = (partial: Partial<Filters>) => onChange({ ...filters, ...partial });
-  console.log("MY PROFILE DATA IS:", userProfile)
+  
+  // State for the loading spinner
+  const [isLocating, setIsLocating] = useState(false);
+
+  // The Geolocation Logic
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    toast.info("Finding your location...");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await response.json();
+          
+          const pincode = data.address?.postcode;
+          const city = data.address?.city || data.address?.state_district || "your area";
+
+          if (pincode) {
+            update({ location: pincode }); 
+            toast.success(`Location updated to ${city} (${pincode})`);
+          } else {
+            toast.error("Found your location, but couldn't detect the pincode.");
+            update({ location: "Current Location" }); 
+          }
+        } catch (error) {
+          toast.error("Failed to translate coordinates.");
+          update({ location: "Current Location" });
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        toast.error("Please allow location access in your browser.");
+        setIsLocating(false);
+      }
+    );
+  };
 
   return (
     <div className="space-y-1">
@@ -74,7 +119,6 @@ const FilterSidebar = ({ filters, onChange, userProfile }: Props) => {
                 
                 {/* BUTTON STACK */}
                 <div className="space-y-2">
-                  {/* Show Home button only if they have a saved pincode AND aren't currently using it */}
                   {userProfile?.default_pincode && filters.location !== userProfile.default_pincode && (
                     <Button 
                       variant="outline" 
@@ -89,17 +133,11 @@ const FilterSidebar = ({ filters, onChange, userProfile }: Props) => {
                   <Button 
                     variant="outline" 
                     className="w-full h-8 text-xs gap-1"
-                    onClick={() => {
-                      if ("geolocation" in navigator) {
-                        navigator.geolocation.getCurrentPosition(
-                          () => update({ location: "Current Location" }),
-                          () => update({ location: "" })
-                        );
-                      }
-                    }}
+                    onClick={handleUseMyLocation}
+                    disabled={isLocating}
                   >
-                    <MapPin className="h-3 w-3" />
-                    Use My Location
+                    {isLocating ? <Loader2 className="h-3 w-3 animate-spin" /> : <MapPin className="h-3 w-3" />}
+                    {isLocating ? "Locating..." : "Use My Location"}
                   </Button>
                 </div>
               </div>
