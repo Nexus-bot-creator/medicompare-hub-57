@@ -38,10 +38,20 @@ const Cart = () => {
               </p>
             )}
           </div>
+          
+          {/* UPDATED: Flex container holding both buttons */}
           {cart.length > 0 && (
-            <Button variant="ghost" className="text-muted-foreground" onClick={() => { clearCart(); toast.success("Cart cleared"); }}>
-              Clear cart
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hidden sm:flex" onClick={() => { clearCart(); toast.success("Cart cleared"); }}>
+                Clear cart
+              </Button>
+              
+              <Link to="/search">
+                <Button variant="outline" size="sm" className="rounded-lg">
+                  Browse More
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
 
