@@ -47,7 +47,7 @@ const Cart = () => {
               </Button>
               
               <Link to="/search">
-                <Button variant="outline" size="sm" className="rounded-lg">
+                <Button variant="outline" size="sm" className="rounded-lg text-primary border-primary hover:bg-primary/10">
                   Browse More
                 </Button>
               </Link>
