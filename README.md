@@ -78,6 +78,10 @@ npm run dev
 
 The application will be running at `http://localhost:5173`.
 
+
+<img width="1920" height="1080" alt="Screenshot 2026-05-02 184202" src="https://github.com/user-attachments/assets/64ed254b-b572-4389-ab70-9a2e85f5a58b" />
+
+
 ---
 
 ## 👥 Development Team
